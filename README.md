@@ -2,6 +2,12 @@
 
 Проект ESPHome для управления бризером TION Bio X через Home Assistant.
 
+## Текущий релиз
+
+**v1.0.0** — первая стабильная версия Full и Lite.
+
+История изменений: [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Версии прошивки
 
 ### Full
