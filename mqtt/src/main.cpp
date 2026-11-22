@@ -38,10 +38,12 @@ uint8_t wifi_attempts = 0;
 bool discovery_sent = false;
 bool ap_active = false;
 bool ota_started = false;
+bool ota_config_checked = false;
 String ota_password;
 
 void startOtaIfConfigured() {
-  if (ota_started || WiFi.status() != WL_CONNECTED) return;
+  if (ota_started || ota_config_checked || WiFi.status() != WL_CONNECTED) return;
+  ota_config_checked = true;
   if (!ConfigStore::loadOtaPassword(ota_password)) return;
   ArduinoOTA.setHostname("tion-biox-01");
   ArduinoOTA.setPassword(ota_password.c_str());
