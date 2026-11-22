@@ -10,6 +10,7 @@ class TuyaUart {
   explicit TuyaUart(HardwareSerial &serial);
   void begin(uint32_t baud, DatapointCallback callback);
   void loop();
+  void setWifiStatus(uint8_t status) { wifi_status_ = status; }
 
   uint32_t validFrames() const { return valid_frames_; }
   uint32_t checksumErrors() const { return checksum_errors_; }
@@ -41,6 +42,7 @@ class TuyaUart {
   uint32_t last_heartbeat_ms_ = 0;
   InitState init_state_ = InitState::WAIT_HEARTBEAT;
   bool initialized_ = false;
+  uint8_t wifi_status_ = 0x02;
 
   void consume(uint8_t byte);
   void processFrame();
