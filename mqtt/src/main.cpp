@@ -73,8 +73,8 @@ const char *entityCategory(uint8_t id) {
   // Home Assistant supports only the built-in config and diagnostic categories.
   // Control entities stay uncategorized (the normal controls section).
   switch (id) {
-    case 104: case 109: case 110: case 114: case 118:
-    case 128: case 129: case 130: case 133: case 134: case 135: case 136:
+    case 104: case 109: case 110: case 118: case 128:
+    case 129: case 130: case 133: case 134: case 135: case 136:
       return "config";
     case 106: case 108: case 112: case 113: case 115: case 116:
     case 122: case 123: case 124: case 127:
@@ -84,6 +84,8 @@ const char *entityCategory(uint8_t id) {
 }
 
 const DatapointInfo *datapointInfo(uint8_t id) {
+  // Command-only reset datapoints are represented as buttons, not state sensors.
+  if (id == 109 || id == 110) return nullptr;
   // These datapoints were explicitly excluded from the published entity set.
   if (id == 117 || id == 120 || id == 125 || id == 126) return nullptr;
   static const DatapointInfo errorInfo =
@@ -93,7 +95,7 @@ const DatapointInfo *datapointInfo(uint8_t id) {
     { "Питание", "binary_sensor", "", "", "", "mdi:power" },
     { "Скорость вентиляции", "sensor", "", "", "measurement", "mdi:fan" },
     { "Звук", "binary_sensor", "", "", "", "mdi:volume-high" },
-    { "Подсветка", "sensor", "%", "", "", "mdi:brightness-6" },
+    { "Подсветка", "select", "", "", "", "mdi:brightness-6" },
     { "Подогрев", "binary_sensor", "", "", "", "mdi:heat-wave" },
     { "Режим вентиляции", "binary_sensor", "", "", "", "mdi:air-filter" },
     { "Внутренняя температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
@@ -120,8 +122,8 @@ const DatapointInfo *datapointInfo(uint8_t id) {
     { "Целевой уровень CO₂", "sensor", "ppm", "carbon_dioxide", "measurement", "mdi:molecule-co2" },
     { "Автоматический режим", "binary_sensor", "", "", "", "mdi:autorenew" },
     { "Ночной режим", "binary_sensor", "", "", "", "mdi:weather-night" },
-    { "Цвет панели", "sensor", "", "", "", "mdi:palette" },
-    { "Период замены фильтра", "sensor", "дн.", "", "measurement", "mdi:calendar-clock" },
+    { "Цвет панели", "select", "", "", "", "mdi:palette" },
+    { "Период замены фильтра", "number", "дн.", "", "measurement", "mdi:calendar-clock" },
     { "Калибровка CO₂", "binary_sensor", "", "", "", "mdi:tune" },
     { "Автокалибровка CO₂", "binary_sensor", "", "", "", "mdi:molecule-co2" }
   };
@@ -149,9 +151,9 @@ const DatapointInfo *datapointInfo(uint8_t id) {
 
 const char *enumValue(uint8_t id, int32_t value) {
   static const char *light[] = { "0", "50", "100" };
-  static const char *heater[] = { "0", "1_KB", "1_4_KB" };
-  static const char *errors[] = { "None", "error1", "error2", "error3", "error4",
-    "error5", "error6", "error7", "error8", "error9", "warning10", "warning11" };
+  static const char *heater[] = { "Выключен", "1 кВт", "1,4 кВт" };
+  static const char *errors[] = { "Нет ошибок", "Ошибка 1", "Ошибка 2", "Ошибка 3", "Ошибка 4",
+    "Ошибка 5", "Ошибка 6", "Ошибка 7", "Ошибка 8", "Ошибка 9", "Предупреждение 10", "Предупреждение 11" };
   static const char *sensor[] = { "absent", "wait", "wait_data", "avail" };
   static const char *voice[] = { "1", "2", "3", "4", "5", "6", "7" };
   static const char *colors[] = { "color0", "color1", "color2", "color3", "color4" };
@@ -200,7 +202,35 @@ void publishDiscoveryDatapoint(uint8_t id) {
   if (category != nullptr) {
     snprintf(category_json, sizeof(category_json), ",\"entity_category\":\"%s\"", category);
   }
-  if (strcmp(info->domain, "binary_sensor") == 0) {
+  if (strcmp(info->domain, "select") == 0) {
+    const char *options = id == 104
+      ? "\"options\":[\"0\",\"50\",\"100\"]"
+      : "\"options\":[\"color0\",\"color1\",\"color2\",\"color3\",\"color4\"]";
+    snprintf(payload, sizeof(payload),
+      "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
+      "\"state_topic\":\"%sstate/dp_%u\","
+      "\"command_topic\":\"%scommand/dp_%u\","
+      "\"availability_topic\":\"%savailability\","
+      "\"entity_category\":\"config\",\"icon\":\"%s\",%s,"
+      "\"device\":{\"identifiers\":[\"%s\"],"
+      "\"name\":\"%s\",\"manufacturer\":\"TION\",\"model\":\"Bio X\"}}",
+      info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
+      baseTopic().c_str(), id, baseTopic().c_str(), info->icon, options,
+      TION_DEVICE_ID, TION_DEVICE_NAME);
+  } else if (strcmp(info->domain, "number") == 0) {
+    snprintf(payload, sizeof(payload),
+      "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
+      "\"state_topic\":\"%sstate/dp_%u\","
+      "\"command_topic\":\"%scommand/dp_%u\","
+      "\"availability_topic\":\"%savailability\","
+      "\"entity_category\":\"config\",\"icon\":\"%s\","
+      "\"unit_of_measurement\":\"%s\",\"min\":1,\"max\":365,\"step\":1,"
+      "\"device\":{\"identifiers\":[\"%s\"],"
+      "\"name\":\"%s\",\"manufacturer\":\"TION\",\"model\":\"Bio X\"}}",
+      info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
+      baseTopic().c_str(), id, baseTopic().c_str(), info->icon, info->unit,
+      TION_DEVICE_ID, TION_DEVICE_NAME);
+  } else if (strcmp(info->domain, "binary_sensor") == 0) {
     snprintf(payload, sizeof(payload),
       "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
       "\"state_topic\":\"%sstate/dp_%u\","
@@ -236,6 +266,84 @@ void publishDiscoveryDatapoint(uint8_t id) {
   }
   if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
 }
+
+void publishClimateState() {
+  if (!mqtt.connected()) return;
+  const TionDpState *power = tion_model.get(101);
+  const TionDpState *heater_raw = tion_model.get(105);
+  const TionDpState *fan = tion_model.get(102);
+  const TionDpState *target = tion_model.get(114);
+  const TionDpState *current = tion_model.get(108);
+
+  if (power && heater_raw) {
+    const char *mode = !power->value ? "off" : (!heater_raw->value ? "heat" : "fan_only");
+    mqtt.publish((baseTopic() + "state/climate/mode").c_str(), mode, true);
+  }
+  if (fan) {
+    char value[8];
+    snprintf(value, sizeof(value), "%ld", static_cast<long>(fan->value));
+    mqtt.publish((baseTopic() + "state/climate/fan_mode").c_str(), value, true);
+  }
+  if (target) {
+    char value[16];
+    snprintf(value, sizeof(value), "%ld", static_cast<long>(target->value));
+    mqtt.publish((baseTopic() + "state/climate/temperature").c_str(), value, true);
+  }
+  if (current) {
+    char value[16];
+    snprintf(value, sizeof(value), "%ld", static_cast<long>(current->value));
+    mqtt.publish((baseTopic() + "state/climate/current_temperature").c_str(), value, true);
+  }
+}
+
+void publishClimateDiscovery() {
+  if (!mqtt.connected()) return;
+  char topic[160];
+  char payload[1024];
+  snprintf(topic, sizeof(topic), "%s/climate/%s/climate/config",
+           TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID);
+  snprintf(payload, sizeof(payload),
+    "{\"name\":\"Климат TION Bio X\",\"unique_id\":\"%s_climate\","
+    "\"availability_topic\":\"%savailability\","
+    "\"mode_state_topic\":\"%sstate/climate/mode\","
+    "\"mode_command_topic\":\"%scommand/climate/mode\","
+    "\"modes\":[\"off\",\"fan_only\",\"heat\"],"
+    "\"temperature_state_topic\":\"%sstate/climate/temperature\","
+    "\"temperature_command_topic\":\"%scommand/climate/temperature\","
+    "\"current_temperature_topic\":\"%sstate/climate/current_temperature\","
+    "\"fan_mode_state_topic\":\"%sstate/climate/fan_mode\","
+    "\"fan_mode_command_topic\":\"%scommand/climate/fan_mode\","
+    "\"fan_modes\":[\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\"],"
+    "\"min_temp\":0,\"max_temp\":30,\"temp_step\":1,"
+    "\"precision\":1,\"temperature_unit\":\"C\","
+    "\"device\":{\"identifiers\":[\"%s\"],\"name\":\"%s\","
+    "\"manufacturer\":\"TION\",\"model\":\"Bio X\"}}",
+    TION_DEVICE_ID, baseTopic().c_str(), baseTopic().c_str(), baseTopic().c_str(),
+    baseTopic().c_str(), baseTopic().c_str(), baseTopic().c_str(),
+    baseTopic().c_str(), baseTopic().c_str(), TION_DEVICE_ID, TION_DEVICE_NAME);
+  mqtt.publish(topic, payload, true);
+}
+
+void publishDiscoveryButton(uint8_t id, const char *name, const char *icon,
+                            bool disabled_by_default) {
+  if (!mqtt.connected()) return;
+  char topic[160];
+  char payload[768];
+  snprintf(topic, sizeof(topic), "%s/button/%s/dp_%u/config",
+           TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
+  snprintf(payload, sizeof(payload),
+    "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
+    "\"command_topic\":\"%scommand/dp_%u\","
+    "\"payload_press\":\"PRESS\",\"availability_topic\":\"%savailability\","
+    "\"entity_category\":\"config\",\"icon\":\"%s\","
+    "\"entity_registry_enabled_default\":%s,"
+    "\"device\":{\"identifiers\":[\"%s\"],\"name\":\"%s\","
+    "\"manufacturer\":\"TION\",\"model\":\"Bio X\"}}",
+    name, TION_DEVICE_ID, id, baseTopic().c_str(), id, baseTopic().c_str(),
+    icon, disabled_by_default ? "false" : "true", TION_DEVICE_ID, TION_DEVICE_NAME);
+  mqtt.publish(topic, payload, true);
+}
+
 void publishDiscoverySensor(const char *object_id, const char *name,
                             const char *state_suffix, const char *unit,
                             const char *icon) {
@@ -286,6 +394,14 @@ void publishDiagnostics() {
 void publishDiscovery() {
   if (!mqtt.connected()) return;
 
+  // Climate command topics are non-retained and are subscribed only after MQTT connects.
+  mqtt.subscribe((baseTopic() + "command/climate/#").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_104").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_109").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_110").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_133").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_134").c_str());
+
   // Publish diagnostic entities immediately; they do not depend on TION UART.
   publishDiscoverySensor("wifi_rssi", "TION ESP Wi-Fi signal",
                          "wifi_rssi", "dBm", "mdi:wifi");
@@ -314,7 +430,7 @@ void publishDiscovery() {
              TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
     mqtt.publish(old_topic, "", true);
   }
-  const uint8_t binary_ids[] = {101, 103, 105, 107, 109, 110, 111, 117, 131, 132, 135, 136};
+  const uint8_t binary_ids[] = {101, 103, 105, 107, 111, 117, 131, 132, 135, 136};
   for (uint8_t id : binary_ids) {
     char old_topic[160];
     snprintf(old_topic, sizeof(old_topic), "%s/sensor/%s/dp_%u/config",
@@ -329,17 +445,83 @@ void publishDiscovery() {
     publishDiscoveryDatapoint(id);
     yield();
   }
+  publishDiscoveryButton(109, "Сброс к заводским настройкам", "mdi:factory", true);
+  publishDiscoveryButton(110, "Сброс счётчика фильтра", "mdi:filter", false);
+  publishClimateDiscovery();
+  publishClimateState();
   discovery_sent = true;
   publishDiagnostics();
   last_diagnostics_publish = millis();
 }
 
 void onMqttMessage(char *topic, uint8_t *payload, unsigned int length) {
-  // Read-only stage: commands are intentionally disabled until datapoints
-  // and their physical effects have been verified on the appliance.
-  (void) topic;
-  (void) payload;
-  (void) length;
+  if (length == 0 || length >= 32 || !tion_uart.initialized()) return;
+  char value[32];
+  memcpy(value, payload, length);
+  value[length] = '\\0';
+  const String command = String(value);
+  const String topic_name(topic);
+
+  if (topic_name == baseTopic() + "command/climate/mode") {
+    if (command == "off") {
+      tion_uart.sendDatapointBool(105, true);   // DP105 is inverted in ESPHome.
+      tion_uart.sendDatapointBool(101, false);
+    } else if (command == "fan_only") {
+      tion_uart.sendDatapointBool(105, true);
+      tion_uart.sendDatapointBool(101, true);
+    } else if (command == "heat") {
+      tion_uart.sendDatapointBool(101, true);
+      tion_uart.sendDatapointBool(105, false);
+    }
+    return;
+  }
+
+  if (topic_name == baseTopic() + "command/climate/fan_mode") {
+    const long speed = command.toInt();
+    if (speed >= 1 && speed <= 7 && String(speed) == command) {
+      tion_uart.sendDatapointInteger(102, static_cast<int32_t>(speed));
+    }
+    return;
+  }
+
+  if (topic_name == baseTopic() + "command/climate/temperature") {
+    char *end = nullptr;
+    const long temperature = strtol(value, &end, 10);
+    if (end != value && *end == '\\0' && temperature >= 0 && temperature <= 30) {
+      tion_uart.sendDatapointInteger(114, static_cast<int32_t>(temperature));
+    }
+    return;
+  }
+
+  if (topic_name == baseTopic() + "command/dp_104") {
+    if (command == "0") tion_uart.sendDatapointEnum(104, 0);
+    else if (command == "50") tion_uart.sendDatapointEnum(104, 1);
+    else if (command == "100") tion_uart.sendDatapointEnum(104, 2);
+    return;
+  }
+  if (topic_name == baseTopic() + "command/dp_133") {
+    if (command.length() == 6 && command.startsWith("color") &&
+        command[5] >= '0' && command[5] <= '4') {
+      tion_uart.sendDatapointEnum(133, static_cast<uint8_t>(command[5] - '0'));
+    }
+    return;
+  }
+  if (topic_name == baseTopic() + "command/dp_134") {
+    char *end = nullptr;
+    const long days = strtol(value, &end, 10);
+    if (end != value && *end == '\\0' && days >= 1 && days <= 365) {
+      tion_uart.sendDatapointInteger(134, static_cast<int32_t>(days));
+    }
+    return;
+  }
+  if (topic_name == baseTopic() + "command/dp_110" && command == "PRESS") {
+    tion_uart.sendDatapointBool(110, true);
+    return;
+  }
+  if (topic_name == baseTopic() + "command/dp_109" && command == "PRESS") {
+    tion_uart.sendDatapointBool(109, true);
+    return;
+  }
 }
 
 void onDatapoint(uint8_t id, uint8_t type, const uint8_t *data,
@@ -349,6 +531,9 @@ void onDatapoint(uint8_t id, uint8_t type, const uint8_t *data,
   if (!tion_model.update(decoded)) return;
   // Discovery for every supported datapoint was already published at MQTT connect.
   publishDatapoint(id);
+  if (id == 101 || id == 102 || id == 105 || id == 108 || id == 114) {
+    publishClimateState();
+  }
 }
 
 void handleRoot() {
