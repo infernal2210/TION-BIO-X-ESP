@@ -28,8 +28,14 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
-    cg.add(var.set_ready(config[CONF_READY]))
-    cg.add(var.set_available(config[CONF_AVAILABLE]))
+    ready = await cg.process_lambda(
+        config[CONF_READY], [], return_type=cg.optional.template(cg.bool_)
+    )
+    available = await cg.process_lambda(
+        config[CONF_AVAILABLE], [], return_type=cg.optional.template(cg.bool_)
+    )
+    cg.add(var.set_ready(ready))
+    cg.add(var.set_available(available))
     cg.add(var.set_timeout(config[CONF_TIMEOUT].total_milliseconds))
 
     for entity_id in config[CONF_ENTITIES]:
