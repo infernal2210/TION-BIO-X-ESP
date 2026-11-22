@@ -144,7 +144,7 @@ switch:
     switch_datapoint: 101
     internal: true
   - platform: tuya
-    name: "Звуковые сигналы (DP103)"
+    name: "Управление — Звуковые сигналы (DP103)"
     switch_datapoint: 103
     icon: mdi:volume-high
   - platform: tuya
@@ -154,15 +154,15 @@ switch:
     inverted: true
     internal: true
   - platform: tuya
-    name: "Режим рециркуляции (DP107)"
+    name: "Управление — Режим рециркуляции (DP107)"
     switch_datapoint: 107
     icon: mdi:autorenew
   - platform: tuya
-    name: "Детская блокировка (DP111)"
+    name: "Управление — Детская блокировка (DP111)"
     switch_datapoint: 111
     icon: mdi:lock
   - platform: tuya
-    name: "Ночной режим (DP132)"
+    name: "Управление — Ночной режим (DP132)"
     switch_datapoint: 132
     icon: mdi:weather-night
 
@@ -186,7 +186,7 @@ number:
     unit_of_measurement: "°C"
     internal: true
   - platform: tuya
-    name: "Период замены фильтра (DP134)"
+    name: "Настройка — Период замены фильтра (DP134)"
     number_datapoint: 134
     min_value: 1
     max_value: 365
@@ -196,26 +196,14 @@ number:
 
 select:
   - platform: tuya
-    name: "Яркость панели (DP104)"
+    name: "Настройка — Яркость панели (DP104)"
     enum_datapoint: 104
     options:
       0: "0 процентов"
       1: "50 процентов"
       2: "100 процентов"
   - platform: tuya
-    name: "Скорость голосовых сообщений (DP125)"
-    enum_datapoint: 125
-    options:
-      0: "Скорость 1"
-      1: "Скорость 2"
-      2: "Скорость 3"
-      3: "Скорость 4"
-      4: "Скорость 5"
-      5: "Скорость 6"
-      6: "Скорость 7"
-    disabled_by_default: true
-  - platform: tuya
-    name: "Цвет панели (DP133)"
+    name: "Настройка — Цвет панели (DP133)"
     enum_datapoint: 133
     options:
       0: "Цвет 1"
@@ -234,48 +222,32 @@ sensor:
     device_class: temperature
     internal: true
   - platform: tuya
-    name: "Температура снаружи (DP112)"
+    name: "Диагностика — Температура снаружи (DP112)"
     sensor_datapoint: 112
     unit_of_measurement: "°C"
     accuracy_decimals: 0
     device_class: temperature
   - platform: tuya
-    name: "Время работы бризера (DP113)"
+    name: "Диагностика — Время работы бризера (DP113)"
     sensor_datapoint: 113
     unit_of_measurement: "s"
     accuracy_decimals: 0
     icon: mdi:timer-outline
   - platform: tuya
-    name: "Остаток ресурса фильтра (DP115)"
+    name: "Диагностика — Остаток ресурса фильтра (DP115)"
     sensor_datapoint: 115
     unit_of_measurement: "%"
     accuracy_decimals: 0
-  - platform: tuya
-    name: "Мощность нагревателя (DP120)"
-    sensor_datapoint: 120
-    unit_of_measurement: "%"
-    accuracy_decimals: 0
-  - platform: tuya
-    name: "Температура помещения (DP126)"
-    sensor_datapoint: 126
-    unit_of_measurement: "°C"
-    accuracy_decimals: 0
-    device_class: temperature
-    disabled_by_default: true
   - platform: wifi_signal
-    name: "Уровень сигнала Wi-Fi (ESP-001)"
+    name: "Диагностика — Уровень сигнала Wi-Fi (ESP-001)"
     update_interval: 60s
     unit_of_measurement: "dBm"
   - platform: uptime
-    name: "Время работы ESP (ESP-002)"
+    name: "Диагностика — Время работы ESP (ESP-002)"
     update_interval: 60s
     unit_of_measurement: "s"
 
 binary_sensor:
-  - platform: tuya
-    name: "Нагреватель включен (DP117)"
-    sensor_datapoint: 117
-    device_class: heat
 
 text_sensor:
   - platform: template
@@ -284,19 +256,19 @@ text_sensor:
     update_interval: never
     disabled_by_default: true
   - platform: template
-    name: "Диагностика ошибок бризера (DP127)"
+    name: "Диагностика — Ошибки бризера (DP127)"
     id: dp127_state
     update_interval: never
   - platform: wifi_info
     ip_address:
-      name: "IP-адрес бризера (ESP-003)"
+      name: "Сервис — IP-адрес бризера (ESP-003)"
   - platform: debug
     reset_reason:
-      name: "Причина перезагрузки ESP (ESP-004)"
+      name: "Диагностика — Причина перезагрузки ESP (ESP-004)"
 
 button:
   - platform: template
-    name: "Сброс к заводским настройкам (DP109)"
+    name: "Сервис — Сброс к заводским настройкам (DP109)"
     icon: mdi:factory
     disabled_by_default: true
     on_press:
@@ -304,14 +276,14 @@ button:
           ESP_LOGW("TION", "DP109 — Команда сброса к заводским настройкам");
           id(tion_tuya).force_set_boolean_datapoint_value(109, true);
   - platform: template
-    name: "Сброс счётчика фильтра (DP110)"
+    name: "Сервис — Сброс счётчика фильтра (DP110)"
     icon: mdi:filter-refresh
     on_press:
       - lambda: |-
           ESP_LOGI("TION", "DP110 — Команда сброса счётчика фильтра");
           id(tion_tuya).force_set_boolean_datapoint_value(110, true);
   - platform: restart
-    name: "Перезагрузить контроллер ESP (ESP-005)"
+    name: "Сервис — Перезагрузить контроллер ESP (ESP-005)"
     entity_category: diagnostic
 
 climate:
