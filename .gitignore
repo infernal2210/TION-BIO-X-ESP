@@ -1,5 +1,6 @@
 **/secrets.yaml
 secrets.yaml
+mqtt/include/secrets.h
 .esphome/
 **/.esphome/
 build/
