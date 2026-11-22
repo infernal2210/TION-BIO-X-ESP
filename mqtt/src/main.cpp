@@ -38,15 +38,10 @@ uint8_t wifi_attempts = 0;
 bool discovery_sent = false;
 bool ap_active = false;
 bool ota_started = false;
-bool ota_config_checked = false;
-String ota_password;
 
-void startOtaIfConfigured() {
-  if (ota_started || ota_config_checked || WiFi.status() != WL_CONNECTED) return;
-  ota_config_checked = true;
-  if (!ConfigStore::loadOtaPassword(ota_password)) return;
+void startOta() {
+  if (ota_started || WiFi.status() != WL_CONNECTED) return;
   ArduinoOTA.setHostname("tion-biox-01");
-  ArduinoOTA.setPassword(ota_password.c_str());
   ArduinoOTA.begin();
   ota_started = true;
 }
@@ -241,10 +236,6 @@ void handleRoot() {
   page += F("'><label>MQTT пароль</label><input name='mqtt_password' type='password' "
             "maxlength='64' autocomplete='new-password' "
             "placeholder='Оставьте пустым, чтобы не менять'>"
-            "<label>Пароль OTA (обновление по Wi-Fi)</label>"
-            "<input name='ota_password' type='password' minlength='8' maxlength='32' "
-            "autocomplete='new-password' placeholder='Задайте пароль от 8 до 32 символов'>"
-            "<small>Пустое поле сохраняет прежний пароль. Если пароль ещё не задан, OTA выключено.</small>"
             "<button type='submit'>Сохранить и перезагрузить</button></form>"
             "<p><small>Настройки хранятся во Flash устройства. Пароли не шифруются.</small></p>"
             "</main></html>");
@@ -266,15 +257,12 @@ void handleSave() {
   const String port_text = web.arg("mqtt_port");
   const String username = web.arg("mqtt_username");
   const String password = web.arg("mqtt_password");
-  const String new_ota_password = web.arg("ota_password");
   const long port = port_text.toInt();
 
   if (ssid.length() == 0 || ssid.length() > 32 || host.length() == 0 ||
       host.length() > 63 || port < 1 || port > 65535 ||
       wifi_password.length() > 64 || username.length() > 32 ||
-      password.length() > 64 ||
-      (new_ota_password.length() > 0 &&
-       (new_ota_password.length() < 8 || new_ota_password.length() > 32))) {
+      password.length() > 64) {
     web.send(400, "text/plain; charset=utf-8", "Проверьте длину полей и MQTT порт");
     return;
   }
@@ -293,11 +281,6 @@ void handleSave() {
   }
   device_config.mqtt_port = static_cast<uint16_t>(port);
 
-  if (new_ota_password.length() > 0 &&
-      !ConfigStore::saveOtaPassword(new_ota_password)) {
-    web.send(500, "text/plain; charset=utf-8", "Не удалось сохранить пароль OTA");
-    return;
-  }
   if (!ConfigStore::save(device_config)) {
     web.send(500, "text/plain; charset=utf-8", "Не удалось сохранить настройки во Flash");
     return;
@@ -445,7 +428,7 @@ void loop() {
   tion_uart.loop();
 
   if (WiFi.status() == WL_CONNECTED) {
-    startOtaIfConfigured();
+    startOta();
     if (ota_started) ArduinoOTA.handle();
     if (!mqtt.connected() && millis() - last_mqtt_attempt >= kMqttRetryMs) {
       last_mqtt_attempt = millis();
