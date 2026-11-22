@@ -139,39 +139,15 @@ void handleRoot() {
   page += F("<br>MQTT: ");
   page += mqtt.connected() ? F("подключено") : F("не подключено");
   page += F("</p><form method='post' action='/save'>"
-            "<label>Wi-Fi сеть (SSID)</label><select name='ssid'>");
-  const int count = WiFi.scanNetworks(false, true);
-  bool selected_found = false;
-  for (int i = 0; i < count; ++i) {
-    const String ssid = WiFi.SSID(i);
-    if (ssid.length() == 0) continue;
-    page += F("<option value='");
-    page += htmlEscape(ssid);
-    page += "'";
-    if (ssid == device_config.wifi_ssid) {
-      page += F(" selected");
-      selected_found = true;
-    }
-    page += F(">");
-    page += htmlEscape(ssid);
-    page += F(" (");
-    page += String(WiFi.RSSI(i));
-    page += F(" dBm)</option>");
-    yield();
-  }
-  if (!selected_found && strlen(device_config.wifi_ssid) > 0) {
-    page += F("<option selected value='");
-    page += htmlEscape(String(device_config.wifi_ssid));
-    page += F("'>");
-    page += htmlEscape(String(device_config.wifi_ssid));
-    page += F(" (сохранённая сеть)</option>");
-  }
-  page += F("</select><label>Или введите SSID вручную</label>"
-            "<input name='ssid_manual' maxlength='32' placeholder='Имя Wi-Fi сети'>"
+            "<label>Имя Wi-Fi сети (SSID)</label><input name='ssid' required "
+            "maxlength='32' autocomplete='off' placeholder='Введите точное имя сети' value='");
+  page += htmlEscape(String(device_config.wifi_ssid));
+  page += F("'><small>Введите имя сети вручную. Регистр букв и пробелы имеют значение.</small>"
             "<label>Пароль Wi-Fi</label>"
             "<input name='wifi_password' type='password' maxlength='64' "
-            "autocomplete='new-password' placeholder='Оставьте пустым для открытой сети'>"
-            "<small>При повторной настройке введите пароль заново.</small>"
+            "autocomplete='new-password' placeholder='Введите пароль Wi-Fi'>"
+            "<small>При повторной настройке пароль нужно ввести заново. "
+            "Для открытой сети оставьте поле пустым.</small>"
             "<label>MQTT сервер</label><input name='mqtt_host' required maxlength='63' value='");
   page += htmlEscape(String(device_config.mqtt_host));
   page += F("'><label>MQTT порт</label><input name='mqtt_port' type='number' "
@@ -187,7 +163,6 @@ void handleRoot() {
             "<p><small>Настройки хранятся во Flash устройства. Пароли не шифруются.</small></p>"
             "</main></html>");
   web.send(200, "text/html; charset=utf-8", page);
-  WiFi.scanDelete();
 }
 
 void handleSave() {
