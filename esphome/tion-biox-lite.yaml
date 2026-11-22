@@ -290,7 +290,6 @@ button:
           id(tion_tuya).force_set_boolean_datapoint_value(109, true);
   - platform: template
     name: "Сброс счётчика фильтра (DP110)"
-    entity_category: config
     icon: mdi:filter-refresh
     on_press:
       - lambda: |-
