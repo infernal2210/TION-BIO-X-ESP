@@ -69,7 +69,23 @@ struct DatapointInfo {
   const char *icon;
 };
 
+const char *entityCategory(uint8_t id) {
+  // Home Assistant supports only the built-in config and diagnostic categories.
+  // Control entities stay uncategorized (the normal controls section).
+  switch (id) {
+    case 104: case 109: case 110: case 114: case 118:
+    case 128: case 129: case 130: case 133: case 134: case 135: case 136:
+      return "config";
+    case 106: case 108: case 112: case 113: case 115: case 116:
+    case 122: case 123: case 124: case 127:
+      return "diagnostic";
+    default: return nullptr;
+  }
+}
+
 const DatapointInfo *datapointInfo(uint8_t id) {
+  // These datapoints were explicitly excluded from the published entity set.
+  if (id == 117 || id == 120 || id == 125 || id == 126) return nullptr;
   static const DatapointInfo errorInfo =
     { "Ошибка устройства", "sensor", "", "", "", "mdi:alert-circle" };
   if (id == 127) return &errorInfo;
@@ -179,6 +195,11 @@ void publishDiscoveryDatapoint(uint8_t id) {
   char payload[768];
   snprintf(topic, sizeof(topic), "%s/%s/%s/dp_%u/config",
            TION_MQTT_DISCOVERY_PREFIX, info->domain, TION_DEVICE_ID, id);
+  char category_json[48] = "";
+  const char *category = entityCategory(id);
+  if (category != nullptr) {
+    snprintf(category_json, sizeof(category_json), ",\\\"entity_category\\\":\\\"%s\\\"", category);
+  }
   if (strcmp(info->domain, "binary_sensor") == 0) {
     snprintf(payload, sizeof(payload),
       "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
@@ -190,7 +211,7 @@ void publishDiscoveryDatapoint(uint8_t id) {
       "\"name\":\"%s\",\"manufacturer\":\"TION\","
       "\"model\":\"Bio X\"}}",
       info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
-      baseTopic().c_str(), info->icon, TION_DEVICE_ID, TION_DEVICE_NAME);
+      baseTopic().c_str(), category_json, info->icon, TION_DEVICE_ID, TION_DEVICE_NAME);
   } else {
     char optional[160] = "";
     if (strlen(info->device_class) > 0) {
@@ -210,7 +231,7 @@ void publishDiscoveryDatapoint(uint8_t id) {
       "\"name\":\"%s\",\"manufacturer\":\"TION\","
       "\"model\":\"Bio X\"}}",
       info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
-      baseTopic().c_str(), info->icon, info->unit, optional,
+      baseTopic().c_str(), category_json, info->icon, info->unit, optional,
       TION_DEVICE_ID, TION_DEVICE_NAME);
   }
   if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
@@ -280,6 +301,26 @@ void publishDiscovery() {
                          "uart_framing_errors", "", "mdi:alert-outline");
   publishDiscoverySensor("free_heap", "TION ESP free heap",
                          "free_heap", "B", "mdi:memory");
+
+  // Remove legacy discovery records for excluded datapoints and old sensor-domain
+  // records for entities that are now binary_sensors. Retained empty payload deletes them.
+  const uint8_t removed_ids[] = {117, 120, 125, 126};
+  for (uint8_t id : removed_ids) {
+    char old_topic[160];
+    snprintf(old_topic, sizeof(old_topic), "%s/sensor/%s/dp_%u/config",
+             TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
+    mqtt.publish(old_topic, "", true);
+    snprintf(old_topic, sizeof(old_topic), "%s/binary_sensor/%s/dp_%u/config",
+             TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
+    mqtt.publish(old_topic, "", true);
+  }
+  const uint8_t binary_ids[] = {101, 103, 105, 107, 109, 110, 111, 117, 131, 132, 135, 136};
+  for (uint8_t id : binary_ids) {
+    char old_topic[160];
+    snprintf(old_topic, sizeof(old_topic), "%s/sensor/%s/dp_%u/config",
+             TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
+    mqtt.publish(old_topic, "", true);
+  }
 
   // Publish the complete profile entity set before TION UART is connected.
   // Entities without a received state remain unknown in Home Assistant.
