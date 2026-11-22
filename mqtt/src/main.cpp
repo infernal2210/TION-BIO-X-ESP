@@ -466,6 +466,13 @@ void publishDiscovery() {
     mqtt.publish(old_topic, "", true);
   }
 
+  const uint8_t old_binary_domain_ids[] = {103, 107, 109, 110, 111, 132};
+  for (uint8_t id : old_binary_domain_ids) {
+    char old_topic[160];
+    snprintf(old_topic, sizeof(old_topic), "%s/binary_sensor/%s/dp_%u/config",
+             TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
+    mqtt.publish(old_topic, "", true);
+  }
   const uint8_t changed_domain_ids[] = {104, 133, 134};
   for (uint8_t id : changed_domain_ids) {
     char old_topic[160];
