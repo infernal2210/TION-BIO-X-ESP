@@ -1,6 +1,6 @@
 # TION Bio X — MQTT firmware
 
-Independent MQTT firmware for ESP8266 ESP-01 (1 MB Flash).
+Independent MQTT firmware for ESP8266 ESP-01 (512 KB Flash).
 
 ## Build environments
 
@@ -14,18 +14,6 @@ pio run -e tion_biox_lite
 pio run -e tion_biox_full
 ```
 
-## OTA updates
-
-The ESP-01 1 MB build uses `eagle.flash.1m64.ld` and an OTA-capable application layout. OTA starts automatically after Wi-Fi connects and does not require an OTA password. This is convenient for a trusted, isolated home LAN, but any device with network access to the ESP-01 may attempt a firmware update.
-
-After installing this firmware once over USB, update it over the local network with:
-
-```powershell
-python -m platformio run -e tion_biox_lite_ota -t upload --upload-port 192.168.1.xxx
-```
-
-Replace the IP with the address shown on the device page or in the router. The regular `tion_biox_lite` environment remains the USB upload/build environment. The actual image size must be checked in the PlatformIO build output before the first OTA update.
-
 ## First boot setup
 
 No Wi-Fi or MQTT credentials are compiled into the firmware. On first boot
@@ -37,7 +25,7 @@ point:
 - Setup page: `http://192.168.4.1/`
 
 The page scans nearby Wi-Fi networks and also allows manual SSID entry.
-Enter the Wi-Fi password and MQTT host/port/username/password, then save. On later visits, leave Wi-Fi and MQTT password fields blank to retain the saved passwords. Set a separate OTA password to enable wireless firmware updates.
+Enter the Wi-Fi password and MQTT host/port/username/password, then save. On later visits, leave Wi-Fi and MQTT password fields blank to retain the saved passwords.
 The device restarts and connects using the stored settings. The default
 broker is `192.168.1.10:1883`. If the saved network cannot be reached after
 five 15-second attempts, the setup AP starts while the device continues
@@ -63,14 +51,12 @@ therefore appears in Home Assistant while the ESP is still on the USB bench.
 
 Diagnostic entities report Wi-Fi RSSI, ESP IP address, UART initialization
 state, valid UART frames, checksum errors, framing errors, and free heap.
-TION datapoint entities are added when the appliance reports datapoints.
-At this diagnostic stage, datapoints are exposed as generic numeric sensors
-named `TION DP <id>`; these are raw Tuya values, not human-friendly controls.
+All datapoint entities supported by the selected profile are discovered immediately, even with the appliance disconnected. Until the first value arrives, their state is `unknown`. At this diagnostic stage, datapoints are exposed as generic numeric sensors named `TION DP <id>`; these are raw Tuya values, not human-friendly controls.
 No MQTT commands are accepted and no control datapoints are transmitted.
 
 ## Hardware
 
-- Board: ESP-01, 1 MB Flash
+- Board: ESP-01, 512 KB Flash
 - UART: 9600 baud, 8N1
 - ESP TX (GPIO1) → TION RX
 - ESP RX (GPIO3) → TION TX
