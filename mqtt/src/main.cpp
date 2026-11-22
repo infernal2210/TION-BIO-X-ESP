@@ -76,12 +76,12 @@ void publishDiscoveryDatapoint(uint8_t id) {
   snprintf(topic, sizeof(topic), "%s/sensor/%s/dp_%u/config",
            TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
   snprintf(payload, sizeof(payload),
-    "{\\"name\\":\\"TION DP %u\\",\\"unique_id\\":\\"%s_dp_%u\\","
-    "\\"state_topic\\":\\"%sstate/dp_%u\\","
-    "\\"availability_topic\\":\\"%savailability\\","
-    "\\"device\\":{\\"identifiers\\":[\\"%s\\"],"
-    "\\"name\\":\\"%s\\",\\"manufacturer\\":\\"TION\\","
-    "\\"model\\":\\"Bio X\\"}}",
+    "{\"name\":\"TION DP %u\",\"unique_id\":\"%s_dp_%u\","
+    "\"state_topic\":\"%sstate/dp_%u\","
+    "\"availability_topic\":\"%savailability\","
+    "\"device\":{\"identifiers\":[\"%s\"],"
+    "\"name\":\"%s\",\"manufacturer\":\"TION\","
+    "\"model\":\"Bio X\"}}",
     id, TION_DEVICE_ID, id, baseTopic().c_str(), id,
     baseTopic().c_str(), TION_DEVICE_ID, TION_DEVICE_NAME);
   if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
@@ -184,7 +184,7 @@ void handleRoot() {
             "<button type='submit'>Сохранить и перезагрузить</button></form>"
             "<p><small>Настройки хранятся во Flash устройства. Пароли не шифруются.</small></p>"
             "</main></html>");
-  server.send(200, "text/html; charset=utf-8", page);
+  web.send(200, "text/html; charset=utf-8", page);
   WiFi.scanDelete();
 }
 
@@ -294,6 +294,12 @@ void maintainWifi() {
   }
 
   const uint32_t now = millis();
+  if (wifi_attempts == 0) {
+    wifi_attempts = 1;
+    WiFi.begin(device_config.wifi_ssid, device_config.wifi_password);
+    wifi_attempt_started = now;
+    return;
+  }
   if (wifi_attempts > 0 && wifi_attempts < kMaxWifiAttempts &&
       now - wifi_attempt_started >= kWifiAttemptTimeoutMs) {
     ++wifi_attempts;
