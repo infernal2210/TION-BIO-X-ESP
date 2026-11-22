@@ -52,10 +52,7 @@ void setDefaults(DeviceConfig &config) {
 }
 
 bool load(DeviceConfig &config) {
-  if (!EEPROM.begin(kEepromSize)) {
-    setDefaults(config);
-    return false;
-  }
+  EEPROM.begin(kEepromSize);
   EEPROM.get(0, config);
   if (valid(config)) return true;
   setDefaults(config);
@@ -63,7 +60,7 @@ bool load(DeviceConfig &config) {
 }
 
 bool save(const DeviceConfig &config) {
-  if (!EEPROM.begin(kEepromSize)) return false;
+  EEPROM.begin(kEepromSize);
   DeviceConfig stored = config;
   stored.magic = kMagic;
   stored.version = kVersion;
