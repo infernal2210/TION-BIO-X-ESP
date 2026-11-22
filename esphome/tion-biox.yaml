@@ -4,8 +4,12 @@ substitutions:
 
 external_components:
   - source:
-      type: local
-      path: components
+      type: git
+      url: https://github.com/infernal2210/TION-BIO-X-ESP
+      ref: main
+      path: esphome/components
+    components:
+      - tion_dp122_gate
 
 esphome:
   name: ${device_name}
