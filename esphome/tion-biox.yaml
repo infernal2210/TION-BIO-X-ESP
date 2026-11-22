@@ -1,9 +1,6 @@
 substitutions:
   device_name: tion-biox
   friendly_name: "Бризер TION Bio X"
-  # ТЕСТ DP122: false — обычная работа; true — имитация состояния ниже
-  dp122_test_mode: "true"
-  dp122_test_state: "2"
 
 external_components:
   - source:
@@ -18,25 +15,6 @@ esphome:
   name: ${device_name}
   friendly_name: ${friendly_name}
   comment: "Полное управление TION Bio X и диагностика UART"
-  on_boot:
-    priority: -100
-    then:
-      - if:
-          condition:
-            lambda: 'return ${dp122_test_mode};'
-          then:
-            - lambda: |-
-                const int state = ${dp122_test_state};
-                if (state < 0 || state > 3) {
-                  ESP_LOGE("TION_TEST", "Недопустимое тестовое состояние DP122: %d", state);
-                  return;
-                }
-                const char *v[] = {"Отсутствует", "Ожидание", "Ожидание данных", "Работает"};
-                id(dp122_value) = state;
-                id(dp122_received) = true;
-                id(dp122_state).publish_state(v[state]);
-                ESP_LOGW("TION_TEST", "ТЕСТ DP122 включён: %s (%d)", v[state], state);
-
 esp8266:
   board: esp01_1m
 
@@ -222,8 +200,8 @@ tuya:
             }
 
 tion_dp122_gate:
-  ready: !lambda 'return id(dp122_received) || ${dp122_test_mode};'
-  available: !lambda 'return ${dp122_test_mode} ? (${dp122_test_state} >= 2) : (id(dp122_value) >= 2);'
+  ready: !lambda 'return id(dp122_received);'
+  available: !lambda 'return id(dp122_value) >= 2;'
   timeout: 10s
   entities:
     - dp106_co2
