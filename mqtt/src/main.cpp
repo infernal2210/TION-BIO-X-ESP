@@ -181,41 +181,40 @@ void publishDiscoveryDatapoint(uint8_t id) {
            TION_MQTT_DISCOVERY_PREFIX, info->domain, TION_DEVICE_ID, id);
   if (strcmp(info->domain, "binary_sensor") == 0) {
     snprintf(payload, sizeof(payload),
-      "{\\"name\\":\\"%s\\",\\"unique_id\\":\\"%s_dp_%u\\","
-      "\\"state_topic\\":\\"%sstate/dp_%u\\","
-      "\\"availability_topic\\":\\"%savailability\\","
-      "\\"payload_on\\":\\"ON\\",\\"payload_off\\":\\"OFF\\","
-      "\\"icon\\":\\"%s\\","
-      "\\"device\\":{\\"identifiers\\":[\\"%s\\"],"
-      "\\"name\\":\\"%s\\",\\"manufacturer\\":\\"TION\\","
-      "\\"model\\":\\"Bio X\\"}}",
+      "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
+      "\"state_topic\":\"%sstate/dp_%u\","
+      "\"availability_topic\":\"%savailability\","
+      "\"payload_on\":\"ON\",\"payload_off\":\"OFF\","
+      "\"icon\":\"%s\","
+      "\"device\":{\"identifiers\":[\"%s\"],"
+      "\"name\":\"%s\",\"manufacturer\":\"TION\","
+      "\"model\":\"Bio X\"}}",
       info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
       baseTopic().c_str(), info->icon, TION_DEVICE_ID, TION_DEVICE_NAME);
   } else {
     char optional[160] = "";
     if (strlen(info->device_class) > 0) {
       snprintf(optional + strlen(optional), sizeof(optional) - strlen(optional),
-               ",\\"device_class\\":\\"%s\\"", info->device_class);
+               ",\"device_class\":\"%s\"", info->device_class);
     }
     if (strlen(info->state_class) > 0) {
       snprintf(optional + strlen(optional), sizeof(optional) - strlen(optional),
-               ",\\"state_class\\":\\"%s\\"", info->state_class);
+               ",\"state_class\":\"%s\"", info->state_class);
     }
     snprintf(payload, sizeof(payload),
-      "{\\"name\\":\\"%s\\",\\"unique_id\\":\\"%s_dp_%u\\","
-      "\\"state_topic\\":\\"%sstate/dp_%u\\","
-      "\\"availability_topic\\":\\"%savailability\\","
-      "\\"icon\\":\\"%s\\",\\"unit_of_measurement\\":\\"%s\\"%s,"
-      "\\"device\\":{\\"identifiers\\":[\\"%s\\"],"
-      "\\"name\\":\\"%s\\",\\"manufacturer\\":\\"TION\\","
-      "\\"model\\":\\"Bio X\\"}}",
+      "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
+      "\"state_topic\":\"%sstate/dp_%u\","
+      "\"availability_topic\":\"%savailability\","
+      "\"icon\":\"%s\",\"unit_of_measurement\":\"%s\"%s,"
+      "\"device\":{\"identifiers\":[\"%s\"],"
+      "\"name\":\"%s\",\"manufacturer\":\"TION\","
+      "\"model\":\"Bio X\"}}",
       info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
       baseTopic().c_str(), info->icon, info->unit, optional,
       TION_DEVICE_ID, TION_DEVICE_NAME);
   }
   if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
 }
-
 void publishDiscoverySensor(const char *object_id, const char *name,
                             const char *state_suffix, const char *unit,
                             const char *icon) {
