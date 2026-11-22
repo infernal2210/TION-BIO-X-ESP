@@ -1,0 +1,56 @@
+name: Build firmware
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Build MQTT Lite
+        working-directory: mqtt
+        run: pio run -e tion_biox_lite
+      - name: Build MQTT Full
+        working-directory: mqtt
+        run: pio run -e tion_biox_full
+      - name: Install ESPHome
+        run: pip install esphome==2026.11.0
+      - name: Create temporary secrets
+        run: |
+          cat > esphome/secrets.yaml <<'EOF'
+          wifi_ssid: "CI_BUILD_ONLY"
+          wifi_password: "ci-build-password"
+          ota_password: "ci-ota-password"
+          ap_password: "ci-ap-password"
+          EOF
+      - name: Build ESPHome Lite
+        run: esphome compile esphome/tion-biox-lite.yaml
+      - name: Build ESPHome Full
+        run: esphome compile esphome/tion-biox_full.yaml
+      - name: Collect binaries
+        run: |
+          mkdir -p dist
+          cp mqtt/.pio/build/tion_biox_lite/firmware.bin dist/tion-biox-mqtt-lite.bin
+          cp mqtt/.pio/build/tion_biox_full/firmware.bin dist/tion-biox-mqtt-full.bin
+          LITE_BIN="$(find esphome/.esphome -path '*tion-biox-lite*' -type f -name firmware.bin -print -quit)"
+          FULL_BIN="$(find esphome/.esphome -path '*tion-biox*' ! -path '*tion-biox-lite*' -type f -name firmware.bin -print -quit)"
+          test -n "$LITE_BIN"
+          test -n "$FULL_BIN"
+          cp "$LITE_BIN" dist/tion-biox-esphome-lite.bin
+          cp "$FULL_BIN" dist/tion-biox-esphome-full.bin
+          ls -lh dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tion-biox-firmware
+          path: dist/*.bin
+          if-no-files-found: error
+          retention-days: 30
