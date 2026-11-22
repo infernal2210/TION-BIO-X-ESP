@@ -116,8 +116,7 @@ void TuyaUart::processFrame() {
     case kConfigQuery:
       if (init_state_ == InitState::WAIT_CONFIG) {
         init_state_ = InitState::WAIT_WIFI_STATE;
-        const uint8_t disconnected = 0x02;
-        sendCommand(kWifiState, &disconnected, 1);
+        sendCommand(kWifiState, &wifi_status_, 1);
       }
       break;
 
