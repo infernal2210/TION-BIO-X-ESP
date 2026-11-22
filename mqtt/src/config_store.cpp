@@ -6,12 +6,6 @@
 
 #include "app_config.h"
 
-#if __has_include("secrets.h")
-#include "secrets.h"
-#else
-#include "secrets.example.h"
-#endif
-
 namespace {
 constexpr uint32_t kMagic = 0x54494F4E;  // "TION"
 constexpr uint8_t kVersion = 1;
@@ -51,17 +45,17 @@ void setDefaults(DeviceConfig &config) {
   memset(&config, 0, sizeof(config));
   config.magic = kMagic;
   config.version = kVersion;
-  strlcpy(config.wifi_ssid, TION_WIFI_SSID, sizeof(config.wifi_ssid));
-  strlcpy(config.wifi_password, TION_WIFI_PASSWORD, sizeof(config.wifi_password));
+  // First boot always enters setup mode; no credentials are compiled into firmware.
   strlcpy(config.mqtt_host, TION_MQTT_DEFAULT_HOST, sizeof(config.mqtt_host));
   config.mqtt_port = TION_MQTT_DEFAULT_PORT;
-  strlcpy(config.mqtt_username, TION_MQTT_USERNAME, sizeof(config.mqtt_username));
-  strlcpy(config.mqtt_password, TION_MQTT_PASSWORD, sizeof(config.mqtt_password));
   config.checksum = checksum(config);
 }
 
 bool load(DeviceConfig &config) {
-  if (!EEPROM.begin(kEepromSize)) return false;
+  if (!EEPROM.begin(kEepromSize)) {
+    setDefaults(config);
+    return false;
+  }
   EEPROM.get(0, config);
   if (valid(config)) return true;
   setDefaults(config);
