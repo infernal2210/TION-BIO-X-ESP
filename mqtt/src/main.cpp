@@ -207,14 +207,14 @@ void publishDiscoveryDatapoint(uint8_t id) {
       "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
       "\"state_topic\":\"%sstate/dp_%u\","
       "\"command_topic\":\"%scommand/dp_%u\","
-      "\"availability_topic\":\"%savailability\","
+      "\"availability_topic\":\"%savailability\"%s,"
       "\"payload_on\":\"ON\",\"payload_off\":\"OFF\","
       "\"state_on\":\"ON\",\"state_off\":\"OFF\","
       "\"icon\":\"%s\","
       "\"device\":{\"identifiers\":[\"%s\"],\"name\":\"%s\","
       "\"manufacturer\":\"TION\",\"model\":\"Bio X\"}}",
       info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
-      baseTopic().c_str(), id, baseTopic().c_str(), info->icon,
+      baseTopic().c_str(), id, baseTopic().c_str(), category_json, info->icon,
       TION_DEVICE_ID, TION_DEVICE_NAME);
   } else if (strcmp(info->domain, "select") == 0) {
     const char *options = id == 104
