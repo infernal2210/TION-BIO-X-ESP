@@ -60,31 +60,146 @@ String htmlEscape(const String &input) {
   return output;
 }
 
+struct DatapointInfo {
+  const char *name;
+  const char *domain;
+  const char *unit;
+  const char *device_class;
+  const char *state_class;
+  const char *icon;
+};
+
+const DatapointInfo *datapointInfo(uint8_t id) {
+  static const DatapointInfo values[] = {
+    { "Питание", "binary_sensor", "", "", "", "mdi:power" },
+    { "Скорость вентиляции", "sensor", "", "", "measurement", "mdi:fan" },
+    { "Звук", "binary_sensor", "", "", "", "mdi:volume-high" },
+    { "Подсветка", "sensor", "%", "", "", "mdi:brightness-6" },
+    { "Подогрев", "binary_sensor", "", "", "", "mdi:heat-wave" },
+    { "Режим вентиляции", "binary_sensor", "", "", "", "mdi:air-filter" },
+    { "Внутренняя температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
+    { "Сброс заводских настроек", "sensor", "", "", "", "mdi:restart-alert" },
+    { "Сброс счётчика фильтра", "sensor", "", "", "", "mdi:air-filter" },
+    { "Детский замок", "binary_sensor", "", "", "", "mdi:lock" },
+    { "Внешняя температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
+    { "Время работы", "sensor", "s", "duration", "total_increasing", "mdi:timer-outline" },
+    { "Заданная температура подогрева", "sensor", "°C", "temperature", "measurement", "mdi:thermostat" },
+    { "Ресурс фильтра", "sensor", "%", "", "measurement", "mdi:air-filter" },
+    { "Уровень CO₂", "sensor", "ppm", "carbon_dioxide", "measurement", "mdi:molecule-co2" },
+    { "PM2.5", "sensor", "µg/m³", "pm25", "measurement", "mdi:blur" },
+    { "Состояние обогревателя", "binary_sensor", "", "", "", "mdi:radiator" },
+    { "Мощность обогревателя", "sensor", "", "", "measurement", "mdi:heat-wave" },
+    { "Влажность", "sensor", "%", "humidity", "measurement", "mdi:water-percent" },
+    { "Нагрузка нагревателя", "sensor", "%", "", "measurement", "mdi:heating-coil" },
+    { "Состояние датчика CO₂", "sensor", "", "", "", "mdi:molecule-co2" },
+    { "Состояние датчика PM2.5", "sensor", "", "", "", "mdi:blur" },
+    { "Состояние датчика температуры и влажности", "sensor", "", "", "", "mdi:thermometer-water" },
+    { "Скорость голосовых подсказок", "sensor", "", "", "measurement", "mdi:account-voice" },
+    { "Комнатная температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
+    { "Максимальная автоскорость", "sensor", "", "", "measurement", "mdi:fan-auto" },
+    { "Минимальная автоскорость", "sensor", "", "", "measurement", "mdi:fan-auto" },
+    { "Целевой уровень CO₂", "sensor", "ppm", "carbon_dioxide", "measurement", "mdi:molecule-co2" },
+    { "Автоматический режим", "binary_sensor", "", "", "", "mdi:autorenew" },
+    { "Ночной режим", "binary_sensor", "", "", "", "mdi:weather-night" },
+    { "Цвет панели", "sensor", "", "", "", "mdi:palette" },
+    { "Период замены фильтра", "sensor", "дн.", "", "measurement", "mdi:calendar-clock" },
+    { "Калибровка CO₂", "sensor", "", "", "", "mdi:tune" },
+    { "Автокалибровка CO₂", "binary_sensor", "", "", "", "mdi:molecule-co2" }
+  };
+  switch (id) {
+    case 101: return &values[0]; case 102: return &values[1];
+    case 103: return &values[2]; case 104: return &values[3];
+    case 105: return &values[4]; case 107: return &values[5];
+    case 108: return &values[6]; case 109: return &values[7];
+    case 110: return &values[8]; case 111: return &values[9];
+    case 112: return &values[10]; case 113: return &values[11];
+    case 114: return &values[12]; case 115: return &values[13];
+    case 106: return &values[14]; case 116: return &values[15];
+    case 117: return &values[16]; case 118: return &values[17];
+    case 119: return &values[18]; case 120: return &values[19];
+    case 122: return &values[20]; case 123: return &values[21];
+    case 124: return &values[22]; case 125: return &values[23];
+    case 126: return &values[24]; case 128: return &values[25];
+    case 129: return &values[26]; case 130: return &values[27];
+    case 131: return &values[28]; case 132: return &values[29];
+    case 133: return &values[30]; case 134: return &values[31];
+    case 135: return &values[32]; case 136: return &values[33];
+    default: return nullptr;
+  }
+}
+
+const char *enumValue(uint8_t id, int32_t value) {
+  static const char *light[] = { "0%", "50%", "100%" };
+  static const char *heater[] = { "0", "1_KB", "1_4_KB" };
+  static const char *errors[] = { "None", "error1", "error2", "error3", "error4",
+    "error5", "error6", "error7", "error8", "error9", "warning10", "warning11" };
+  static const char *sensor[] = { "absent", "wait", "wait_data", "avail" };
+  static const char *voice[] = { "1", "2", "3", "4", "5", "6", "7" };
+  static const char *colors[] = { "color0", "color1", "color2", "color3", "color4" };
+  const char **items = nullptr;
+  size_t count = 0;
+  switch (id) {
+    case 104: items = light; count = 3; break;
+    case 118: items = heater; count = 3; break;
+    case 127: items = errors; count = 12; break;
+    case 122: case 123: case 124: items = sensor; count = 4; break;
+    case 125: items = voice; count = 7; break;
+    case 133: items = colors; count = 5; break;
+    default: return nullptr;
+  }
+  return value >= 0 && static_cast<size_t>(value) < count ? items[value] : "unknown";
+}
+
 void publishDatapoint(uint8_t id) {
   if (!mqtt.connected()) return;
   const TionDpState *state = tion_model.get(id);
   if (state == nullptr) return;
-  char value[16];
-  snprintf(value, sizeof(value), "%ld", static_cast<long>(state->value));
+  char value[32];
+  if (state->type == TuyaDpType::BOOL) {
+    snprintf(value, sizeof(value), "%s", state->value ? "ON" : "OFF");
+  } else if (id == 104 || id == 118 || id == 122 || id == 123 ||
+             id == 124 || id == 125 || id == 127 || id == 133) {
+    const char *decoded = enumValue(id, state->value);
+    strlcpy(value, decoded ? decoded : "unknown", sizeof(value));
+  } else {
+    snprintf(value, sizeof(value), "%ld", static_cast<long>(state->value));
+  }
   const String topic = stateTopic(id);
   mqtt.publish(topic.c_str(), value, true);
 }
 
 void publishDiscoveryDatapoint(uint8_t id) {
   if (!mqtt.connected() || !tion_model.supports(id)) return;
+  const DatapointInfo *info = datapointInfo(id);
+  if (info == nullptr) return;
   char topic[160];
-  char payload[512];
-  snprintf(topic, sizeof(topic), "%s/sensor/%s/dp_%u/config",
-           TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
-  snprintf(payload, sizeof(payload),
-    "{\"name\":\"TION DP %u\",\"unique_id\":\"%s_dp_%u\","
-    "\"state_topic\":\"%sstate/dp_%u\","
-    "\"availability_topic\":\"%savailability\","
-    "\"device\":{\"identifiers\":[\"%s\"],"
-    "\"name\":\"%s\",\"manufacturer\":\"TION\","
-    "\"model\":\"Bio X\"}}",
-    id, TION_DEVICE_ID, id, baseTopic().c_str(), id,
-    baseTopic().c_str(), TION_DEVICE_ID, TION_DEVICE_NAME);
+  char payload[768];
+  snprintf(topic, sizeof(topic), "%s/%s/%s/dp_%u/config",
+           TION_MQTT_DISCOVERY_PREFIX, info->domain, TION_DEVICE_ID, id);
+  if (strcmp(info->domain, "binary_sensor") == 0) {
+    snprintf(payload, sizeof(payload),
+      "{\\"name\\":\\"%s\\",\\"unique_id\\":\\"%s_dp_%u\\","
+      "\\"state_topic\\":\\"%sstate/dp_%u\\","
+      "\\"availability_topic\\":\\"%savailability\\","
+      "\\"payload_on\\":\\"ON\\",\\"payload_off\\":\\"OFF\\","
+      "\\"icon\\":\\"%s\\","
+      "\\"device\\":{\\"identifiers\\":[\\"%s\\"],"
+      "\\"name\\":\\"%s\\",\\"manufacturer\\":\\"TION\\","
+      "\\"model\\":\\"Bio X\\"}}",
+      info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
+      baseTopic().c_str(), info->icon, TION_DEVICE_ID, TION_DEVICE_NAME);
+  } else {
+    snprintf(payload, sizeof(payload),
+      "{\\"name\\":\\"%s\\",\\"unique_id\\":\\"%s_dp_%u\\","
+      "\\"state_topic\\":\\"%sstate/dp_%u\\","
+      "\\"availability_topic\\":\\"%savailability\\","
+      "\\"icon\\":\\"%s\\",\\"unit_of_measurement\\":\\"%s\\","
+      "\\"device\\":{\\"identifiers\\":[\\"%s\\"],"
+      "\\"name\\":\\"%s\\",\\"manufacturer\\":\\"TION\\","
+      "\\"model\\":\\"Bio X\\"}}",
+      info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
+      baseTopic().c_str(), info->icon, info->unit, TION_DEVICE_ID, TION_DEVICE_NAME);
+  }
   if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
 }
 
