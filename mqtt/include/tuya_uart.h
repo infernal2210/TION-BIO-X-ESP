@@ -16,6 +16,9 @@ class TuyaUart {
   uint32_t checksumErrors() const { return checksum_errors_; }
   uint32_t framingErrors() const { return framing_errors_; }
   bool initialized() const { return initialized_; }
+  bool sendDatapointBool(uint8_t id, bool value);
+  bool sendDatapointInteger(uint8_t id, int32_t value);
+  bool sendDatapointEnum(uint8_t id, uint8_t value);
 
  private:
   static constexpr uint16_t kMaxPayload = 240;
