@@ -170,6 +170,34 @@ void TuyaUart::processDatapoints(const uint8_t *payload, uint16_t length) {
   if (offset != length) ++framing_errors_;
 }
 
+bool TuyaUart::sendDatapointBool(uint8_t id, bool value) {
+  if (!initialized_) return false;
+  const uint8_t payload[] = {id, 0x01, 0x00, 0x01, static_cast<uint8_t>(value ? 1 : 0)};
+  sendCommand(0x06, payload, sizeof(payload));
+  return true;
+}
+
+bool TuyaUart::sendDatapointInteger(uint8_t id, int32_t value) {
+  if (!initialized_) return false;
+  const uint32_t raw = static_cast<uint32_t>(value);
+  const uint8_t payload[] = {
+    id, 0x02, 0x00, 0x04,
+    static_cast<uint8_t>(raw >> 24),
+    static_cast<uint8_t>(raw >> 16),
+    static_cast<uint8_t>(raw >> 8),
+    static_cast<uint8_t>(raw)
+  };
+  sendCommand(0x06, payload, sizeof(payload));
+  return true;
+}
+
+bool TuyaUart::sendDatapointEnum(uint8_t id, uint8_t value) {
+  if (!initialized_) return false;
+  const uint8_t payload[] = {id, 0x04, 0x00, 0x01, value};
+  sendCommand(0x06, payload, sizeof(payload));
+  return true;
+}
+
 void TuyaUart::sendEmptyCommand(uint8_t command) {
   sendCommand(command);
 }
