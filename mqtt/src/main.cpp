@@ -30,6 +30,7 @@ constexpr uint8_t kDnsPort = 53;
 constexpr char kSetupApPassword[] = "tionbiox01";
 
 uint32_t last_mqtt_attempt = 0;
+uint32_t last_diagnostics_publish = 0;
 uint32_t wifi_attempt_started = 0;
 uint32_t last_wifi_retry = 0;
 uint8_t wifi_attempts = 0;
@@ -87,14 +88,81 @@ void publishDiscoveryDatapoint(uint8_t id) {
   if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
 }
 
+void publishDiscoverySensor(const char *object_id, const char *name,
+                            const char *state_suffix, const char *unit,
+                            const char *icon) {
+  if (!mqtt.connected()) return;
+  char topic[160];
+  char payload[512];
+  snprintf(topic, sizeof(topic), "%s/sensor/%s/%s/config",
+           TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, object_id);
+  snprintf(payload, sizeof(payload),
+    "{\"name\":\"%s\",\"unique_id\":\"%s_%s\","
+    "\"state_topic\":\"%sdiagnostic/%s\","
+    "\"availability_topic\":\"%savailability\","
+    "\"entity_category\":\"diagnostic\","
+    "\"icon\":\"%s\","
+    "\"unit_of_measurement\":\"%s\","
+    "\"device\":{\"identifiers\":[\"%s\"],"
+    "\"name\":\"%s\",\"manufacturer\":\"TION\","
+    "\"model\":\"Bio X\"}}",
+    name, TION_DEVICE_ID, object_id, baseTopic().c_str(), state_suffix,
+    baseTopic().c_str(), icon, unit, TION_DEVICE_ID, TION_DEVICE_NAME);
+  mqtt.publish(topic, payload, true);
+}
+
+void publishDiagnostics() {
+  if (!mqtt.connected()) return;
+  char value[24];
+
+  snprintf(value, sizeof(value), "%d", WiFi.RSSI());
+  mqtt.publish((baseTopic() + "diagnostic/wifi_rssi").c_str(), value, true);
+  mqtt.publish((baseTopic() + "diagnostic/wifi_ip").c_str(),
+               WiFi.localIP().toString().c_str(), true);
+  mqtt.publish((baseTopic() + "diagnostic/uart_state").c_str(),
+               tion_uart.initialized() ? "initialized" : "waiting", true);
+
+  snprintf(value, sizeof(value), "%lu",
+           static_cast<unsigned long>(tion_uart.validFrames()));
+  mqtt.publish((baseTopic() + "diagnostic/uart_valid_frames").c_str(), value, true);
+  snprintf(value, sizeof(value), "%lu",
+           static_cast<unsigned long>(tion_uart.checksumErrors()));
+  mqtt.publish((baseTopic() + "diagnostic/uart_checksum_errors").c_str(), value, true);
+  snprintf(value, sizeof(value), "%lu",
+           static_cast<unsigned long>(tion_uart.framingErrors()));
+  mqtt.publish((baseTopic() + "diagnostic/uart_framing_errors").c_str(), value, true);
+  snprintf(value, sizeof(value), "%u", ESP.getFreeHeap());
+  mqtt.publish((baseTopic() + "diagnostic/free_heap").c_str(), value, true);
+}
+
 void publishDiscovery() {
   if (!mqtt.connected()) return;
+
+  // Publish diagnostic entities immediately; they do not depend on TION UART.
+  publishDiscoverySensor("wifi_rssi", "TION ESP Wi-Fi signal",
+                         "wifi_rssi", "dBm", "mdi:wifi");
+  publishDiscoverySensor("wifi_ip", "TION ESP IP address",
+                         "wifi_ip", "", "mdi:ip-network");
+  publishDiscoverySensor("uart_state", "TION UART state",
+                         "uart_state", "", "mdi:serial-port");
+  publishDiscoverySensor("uart_valid_frames", "TION UART valid frames",
+                         "uart_valid_frames", "", "mdi:counter");
+  publishDiscoverySensor("uart_checksum_errors", "TION UART checksum errors",
+                         "uart_checksum_errors", "", "mdi:alert-circle-outline");
+  publishDiscoverySensor("uart_framing_errors", "TION UART framing errors",
+                         "uart_framing_errors", "", "mdi:alert-outline");
+  publishDiscoverySensor("free_heap", "TION ESP free heap",
+                         "free_heap", "B", "mdi:memory");
+
+  // TION datapoint entities are added as soon as the appliance reports them.
   for (uint8_t id = 101; id <= 136; ++id) {
     if (!tion_model.has(id)) continue;
     publishDiscoveryDatapoint(id);
     yield();
   }
   discovery_sent = true;
+  publishDiagnostics();
+  last_diagnostics_publish = millis();
 }
 
 void onMqttMessage(char *topic, uint8_t *payload, unsigned int length) {
@@ -355,7 +423,12 @@ void loop() {
     }
     if (mqtt.connected()) {
       mqtt.loop();
-      if (!discovery_sent && tion_uart.initialized()) publishDiscovery();
+      if (!discovery_sent) publishDiscovery();
+      if (discovery_sent &&
+          millis() - last_diagnostics_publish >= 30000) {
+        publishDiagnostics();
+        last_diagnostics_publish = millis();
+      }
     }
   }
   yield();
