@@ -218,7 +218,7 @@ tion_dp122_gate:
 switch:
   - platform: tuya
     id: tion_power
-    name: "Питание бризера (DP101)"
+    name: "Питание бризера"
     switch_datapoint: 101
     internal: true
   - platform: tuya
@@ -228,7 +228,7 @@ switch:
     icon: mdi:volume-high
   - platform: tuya
     id: tion_heater
-    name: "Подогрев воздуха (DP105)"
+    name: "Подогрев воздуха"
     switch_datapoint: 105
     inverted: true
     internal: true
@@ -262,7 +262,7 @@ switch:
 number:
   - platform: tuya
     id: tion_fan_speed
-    name: "Скорость вентиляции (DP102)"
+    name: "Скорость вентиляции"
     number_datapoint: 102
     min_value: 1
     max_value: 7
@@ -271,7 +271,7 @@ number:
     internal: true
   - platform: tuya
     id: tion_target_temperature
-    name: "Заданная температура подогрева (DP114)"
+    name: "Заданная температура подогрева"
     number_datapoint: 114
     min_value: 0
     max_value: 30
@@ -302,9 +302,9 @@ number:
     max_value: 1500
     step: 50
     unit_of_measurement: "ppm"
-    disabled_by_default: true
+    internal: true
   - platform: tuya
-    name: "Период замены фильтра (DP134)"
+    name: "Период замены фильтра"
     number_datapoint: 134
     min_value: 1
     max_value: 365
@@ -357,7 +357,7 @@ sensor:
     internal: true
   - platform: tuya
     id: tion_inside_temperature
-    name: "Температура внутри (DP108)"
+    name: "Температура внутри"
     sensor_datapoint: 108
     unit_of_measurement: "°C"
     accuracy_decimals: 0
