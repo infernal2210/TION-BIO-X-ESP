@@ -17,8 +17,10 @@ bool TionDP122Gate::can_proceed() {
   if (this->finished_)
     return true;
 
-  if (this->ready_ && this->ready_()) {
-    const bool expose = this->available_ && this->available_();
+  const auto ready = this->ready_();
+  if (ready.has_value() && ready.value()) {
+    const auto available = this->available_();
+    const bool expose = available.has_value() && available.value();
 
     for (auto *entity : this->entities_)
       entity->set_internal(!expose);
