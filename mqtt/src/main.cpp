@@ -94,14 +94,14 @@ const DatapointInfo *datapointInfo(uint8_t id) {
   static const DatapointInfo values[] = {
     { "Питание", "binary_sensor", "", "", "", "mdi:power" },
     { "Скорость вентиляции", "sensor", "", "", "measurement", "mdi:fan" },
-    { "Звук", "binary_sensor", "", "", "", "mdi:volume-high" },
+    { "Звук", "switch", "", "", "", "mdi:volume-high" },
     { "Подсветка", "select", "", "", "", "mdi:brightness-6" },
     { "Подогрев", "binary_sensor", "", "", "", "mdi:heat-wave" },
-    { "Режим вентиляции", "binary_sensor", "", "", "", "mdi:air-filter" },
+    { "Режим вентиляции", "switch", "", "", "", "mdi:air-filter" },
     { "Внутренняя температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
     { "Сброс заводских настроек", "binary_sensor", "", "", "", "mdi:restart-alert" },
     { "Сброс счётчика фильтра", "binary_sensor", "", "", "", "mdi:air-filter" },
-    { "Детский замок", "binary_sensor", "", "", "", "mdi:lock" },
+    { "Детский замок", "switch", "", "", "", "mdi:lock" },
     { "Внешняя температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
     { "Время работы", "sensor", "s", "duration", "total_increasing", "mdi:timer-outline" },
     { "Заданная температура подогрева", "sensor", "°C", "temperature", "measurement", "mdi:thermostat" },
@@ -121,7 +121,7 @@ const DatapointInfo *datapointInfo(uint8_t id) {
     { "Минимальная автоскорость", "sensor", "", "", "measurement", "mdi:fan-auto" },
     { "Целевой уровень CO₂", "sensor", "ppm", "carbon_dioxide", "measurement", "mdi:molecule-co2" },
     { "Автоматический режим", "binary_sensor", "", "", "", "mdi:autorenew" },
-    { "Ночной режим", "binary_sensor", "", "", "", "mdi:weather-night" },
+    { "Ночной режим", "switch", "", "", "", "mdi:weather-night" },
     { "Цвет панели", "select", "", "", "", "mdi:palette" },
     { "Период замены фильтра", "number", "дн.", "", "measurement", "mdi:calendar-clock" },
     { "Калибровка CO₂", "binary_sensor", "", "", "", "mdi:tune" },
@@ -202,7 +202,21 @@ void publishDiscoveryDatapoint(uint8_t id) {
   if (category != nullptr) {
     snprintf(category_json, sizeof(category_json), ",\"entity_category\":\"%s\"", category);
   }
-  if (strcmp(info->domain, "select") == 0) {
+  if (strcmp(info->domain, "switch") == 0) {
+    snprintf(payload, sizeof(payload),
+      "{\"name\":\"%s\",\"unique_id\":\"%s_dp_%u\","
+      "\"state_topic\":\"%sstate/dp_%u\","
+      "\"command_topic\":\"%scommand/dp_%u\","
+      "\"availability_topic\":\"%savailability\","
+      "\"payload_on\":\"ON\",\"payload_off\":\"OFF\","
+      "\"state_on\":\"ON\",\"state_off\":\"OFF\","
+      "\"icon\":\"%s\","
+      "\"device\":{\"identifiers\":[\"%s\"],\"name\":\"%s\","
+      "\"manufacturer\":\"TION\",\"model\":\"Bio X\"}}",
+      info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
+      baseTopic().c_str(), id, baseTopic().c_str(), info->icon,
+      TION_DEVICE_ID, TION_DEVICE_NAME);
+  } else if (strcmp(info->domain, "select") == 0) {
     const char *options = id == 104
       ? "\"options\":[\"0\",\"50\",\"100\"]"
       : "\"options\":[\"color0\",\"color1\",\"color2\",\"color3\",\"color4\"]";
@@ -396,7 +410,11 @@ void publishDiscovery() {
 
   // Climate command topics are non-retained and are subscribed only after MQTT connects.
   mqtt.subscribe((baseTopic() + "command/climate/#").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_103").c_str());
   mqtt.subscribe((baseTopic() + "command/dp_104").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_107").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_111").c_str());
+  mqtt.subscribe((baseTopic() + "command/dp_132").c_str());
   mqtt.subscribe((baseTopic() + "command/dp_109").c_str());
   mqtt.subscribe((baseTopic() + "command/dp_110").c_str());
   mqtt.subscribe((baseTopic() + "command/dp_133").c_str());
@@ -497,6 +515,25 @@ void onMqttMessage(char *topic, uint8_t *payload, unsigned int length) {
     if (end != value && *end == '\0' && temperature >= 0 && temperature <= 30) {
       tion_uart.sendDatapointInteger(114, static_cast<int32_t>(temperature));
     }
+    return;
+  }
+
+  if (topic_name == baseTopic() + "command/dp_103" ||
+      topic_name == baseTopic() + "command/dp_107" ||
+      topic_name == baseTopic() + "command/dp_111" ||
+      topic_name == baseTopic() + "command/dp_132") {
+    bool state;
+    if (command == "ON") state = true;
+    else if (command == "OFF") state = false;
+    else return;
+    if (topic_name == baseTopic() + "command/dp_107") {
+      const TionDpState *power = tion_model.get(101);
+      if (state && (!power || power->value == 0)) return;
+    }
+    uint8_t id = topic_name.endsWith("dp_103") ? 103 :
+                 topic_name.endsWith("dp_107") ? 107 :
+                 topic_name.endsWith("dp_111") ? 111 : 132;
+    tion_uart.sendDatapointBool(id, state);
     return;
   }
 
