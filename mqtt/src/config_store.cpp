@@ -10,6 +10,8 @@ namespace {
 constexpr uint32_t kMagic = 0x54494F4E;  // "TION"
 constexpr uint8_t kVersion = 1;
 constexpr size_t kEepromSize = 512;
+constexpr size_t kOtaPasswordOffset = 300;
+constexpr size_t kOtaPasswordSize = 33;
 
 uint32_t checksum(const DeviceConfig &config) {
   const uint8_t *bytes = reinterpret_cast<const uint8_t *>(&config);
@@ -57,6 +59,30 @@ bool load(DeviceConfig &config) {
   if (valid(config)) return true;
   setDefaults(config);
   return false;
+}
+
+bool loadOtaPassword(String &password) {
+  EEPROM.begin(kEepromSize);
+  char stored[kOtaPasswordSize] = {};
+  for (size_t i = 0; i < kOtaPasswordSize; ++i) {
+    stored[i] = static_cast<char>(EEPROM.read(kOtaPasswordOffset + i));
+  }
+  if (memchr(stored, '\0', sizeof(stored)) == nullptr) return false;
+  const size_t length = strnlen(stored, sizeof(stored));
+  if (length < 8 || length > 32) return false;
+  password = stored;
+  return true;
+}
+
+bool saveOtaPassword(const String &password) {
+  if (password.length() < 8 || password.length() > 32) return false;
+  EEPROM.begin(kEepromSize);
+  char stored[kOtaPasswordSize] = {};
+  strlcpy(stored, password.c_str(), sizeof(stored));
+  for (size_t i = 0; i < kOtaPasswordSize; ++i) {
+    EEPROM.write(kOtaPasswordOffset + i, static_cast<uint8_t>(stored[i]));
+  }
+  return EEPROM.commit();
 }
 
 bool save(const DeviceConfig &config) {
