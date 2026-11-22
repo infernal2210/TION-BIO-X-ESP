@@ -186,20 +186,6 @@ number:
     unit_of_measurement: "°C"
     internal: true
   - platform: tuya
-    name: "Максимальная скорость авто (DP128)"
-    number_datapoint: 128
-    min_value: 1
-    max_value: 7
-    step: 1
-    disabled_by_default: true
-  - platform: tuya
-    name: "Минимальная скорость авто (DP129)"
-    number_datapoint: 129
-    min_value: 0
-    max_value: 1
-    step: 1
-    disabled_by_default: true
-  - platform: tuya
     name: "Период замены фильтра (DP134)"
     number_datapoint: 134
     min_value: 1
