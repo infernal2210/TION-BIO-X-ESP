@@ -408,6 +408,16 @@ void publishDiagnostics() {
 void publishDiscovery() {
   if (!mqtt.connected()) return;
 
+  // Clear any stale retained commands before subscribing. Commands must be one-shot.
+  const char *command_topics[] = {
+    "command/climate/mode", "command/climate/temperature", "command/climate/fan_mode",
+    "command/dp_103", "command/dp_104", "command/dp_107", "command/dp_109",
+    "command/dp_110", "command/dp_111", "command/dp_132", "command/dp_133",
+    "command/dp_134"
+  };
+  for (const char *suffix : command_topics) {
+    mqtt.publish((baseTopic() + suffix).c_str(), "", true);
+  }
   // Climate command topics are non-retained and are subscribed only after MQTT connects.
   mqtt.subscribe((baseTopic() + "command/climate/#").c_str());
   mqtt.subscribe((baseTopic() + "command/dp_103").c_str());
