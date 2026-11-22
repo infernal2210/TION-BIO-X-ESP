@@ -1,0 +1,475 @@
+substitutions:
+  device_name: tion-biox
+  friendly_name: "Бризер TION Bio X"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  comment: "Полное управление TION Bio X и диагностика UART"
+
+esp8266:
+  board: esp01_1m
+
+logger:
+  level: VERY_VERBOSE
+  baud_rate: 0
+
+api:
+
+ota:
+  - platform: esphome
+    password: !secret tion_test__ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  ap:
+    ssid: TION-BIOX-Настройка
+    password: !secret tion_biox__ota_password
+
+captive_portal:
+
+uart:
+  id: tion_uart
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 9600
+  data_bits: 8
+  parity: NONE
+  stop_bits: 1
+  rx_buffer_size: 512
+  debug:
+    direction: BOTH
+    dummy_receiver: false
+    after:
+      timeout: 30ms
+    sequence:
+      - lambda: |-
+          UARTDebug::log_hex(direction, bytes, ' ', debug_prefix);
+
+globals:
+  - id: tion_power_state
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+  - id: tion_heater_state
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+tuya:
+  id: tion_tuya
+  on_datapoint_update:
+    - sensor_datapoint: 101
+      datapoint_type: bool
+      then:
+        - lambda: |-
+            id(tion_power_state) = x;
+            ESP_LOGI("TION", "DP101 — Питание: %s", x ? "ВКЛ" : "ВЫКЛ");
+        - climate.template.publish:
+            id: tion_climate
+            mode: !lambda |-
+              if (!id(tion_power_state)) return climate::CLIMATE_MODE_OFF;
+              if (id(tion_heater_state)) return climate::CLIMATE_MODE_HEAT;
+              return climate::CLIMATE_MODE_FAN_ONLY;
+
+    - sensor_datapoint: 102
+      datapoint_type: int
+      then:
+        - lambda: |-
+            ESP_LOGI("TION", "DP102 — Скорость вентиляции: %d", x);
+        - if:
+            condition:
+              lambda: 'return x >= 1 && x <= 7;'
+            then:
+              - climate.template.publish:
+                  id: tion_climate
+                  custom_fan_mode: !lambda |-
+                    return std::to_string(x);
+
+    - sensor_datapoint: 105
+      datapoint_type: bool
+      then:
+        - lambda: |-
+            id(tion_heater_state) = !x;
+            ESP_LOGI("TION", "DP105 — Подогрев (инверсия): %s",
+              id(tion_heater_state) ? "ВКЛ" : "ВЫКЛ");
+        - climate.template.publish:
+            id: tion_climate
+            mode: !lambda |-
+              if (!id(tion_power_state)) return climate::CLIMATE_MODE_OFF;
+              if (id(tion_heater_state)) return climate::CLIMATE_MODE_HEAT;
+              return climate::CLIMATE_MODE_FAN_ONLY;
+
+    - sensor_datapoint: 114
+      datapoint_type: int
+      then:
+        - lambda: |-
+            ESP_LOGI("TION", "DP114 — Заданная температура: %d °C", x);
+        - climate.template.publish:
+            id: tion_climate
+            target_temperature: !lambda |-
+              return x;
+
+    - sensor_datapoint: 118
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            const char *v[] = {"Выключен", "1 кВт", "1,4 кВт"};
+            if (x < 3) {
+              id(dp118_state).publish_state(v[x]);
+              ESP_LOGI("TION", "DP118 — Тип нагревателя: %s", v[x]);
+            }
+
+    - sensor_datapoint: 122
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            const char *v[] = {"Отсутствует", "Ожидание", "Ожидание данных", "Работает"};
+            if (x < 4) {
+              id(dp122_state).publish_state(v[x]);
+              ESP_LOGI("TION", "DP122 — Датчик CO2: %s", v[x]);
+            }
+
+    - sensor_datapoint: 123
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            const char *v[] = {"Отсутствует", "Ожидание", "Ожидание данных", "Работает"};
+            if (x < 4) {
+              id(dp123_state).publish_state(v[x]);
+              ESP_LOGI("TION", "DP123 — Датчик PM2.5: %s", v[x]);
+            }
+
+    - sensor_datapoint: 124
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            const char *v[] = {"Отсутствует", "Ожидание", "Ожидание данных", "Работает"};
+            if (x < 4) {
+              id(dp124_state).publish_state(v[x]);
+              ESP_LOGI("TION", "DP124 — Датчик температуры и влажности: %s", v[x]);
+            }
+
+    - sensor_datapoint: 127
+      datapoint_type: enum
+      then:
+        - lambda: |-
+            const char *v[] = {
+              "Нет ошибок", "Ошибка 1", "Ошибка 2", "Ошибка 3",
+              "Ошибка 4", "Ошибка 5", "Ошибка 6", "Ошибка 7",
+              "Ошибка 8", "Ошибка 9", "Предупреждение 10",
+              "Предупреждение 11"
+            };
+            if (x < 12) {
+              id(dp127_state).publish_state(v[x]);
+              ESP_LOGI("TION", "DP127 — Состояние устройства: %s", v[x]);
+            }
+
+switch:
+  - platform: tuya
+    id: tion_power
+    name: "Питание бризера (DP101)"
+    switch_datapoint: 101
+    internal: true
+  - platform: tuya
+    name: "Звуковые сигналы (DP103)"
+    switch_datapoint: 103
+    icon: mdi:volume-high
+  - platform: tuya
+    id: tion_heater
+    name: "Подогрев воздуха (DP105)"
+    switch_datapoint: 105
+    inverted: true
+    internal: true
+  - platform: tuya
+    name: "Режим рециркуляции (DP107)"
+    switch_datapoint: 107
+    icon: mdi:autorenew
+  - platform: tuya
+    name: "Детская блокировка (DP111)"
+    switch_datapoint: 111
+    icon: mdi:lock
+  - platform: tuya
+    name: "Автоматический режим (DP131)"
+    switch_datapoint: 131
+    icon: mdi:autorenew
+  - platform: tuya
+    name: "Ночной режим (DP132)"
+    switch_datapoint: 132
+    icon: mdi:weather-night
+  - platform: tuya
+    name: "Автокалибровка CO2 (DP136)"
+    switch_datapoint: 136
+    icon: mdi:calibrate
+    disabled_by_default: true
+
+number:
+  - platform: tuya
+    id: tion_fan_speed
+    name: "Скорость вентиляции (DP102)"
+    number_datapoint: 102
+    min_value: 1
+    max_value: 7
+    step: 1
+    mode: slider
+    internal: true
+  - platform: tuya
+    id: tion_target_temperature
+    name: "Заданная температура подогрева (DP114)"
+    number_datapoint: 114
+    min_value: 0
+    max_value: 30
+    step: 1
+    unit_of_measurement: "°C"
+    internal: true
+  - platform: tuya
+    name: "Максимальная скорость авто (DP128)"
+    number_datapoint: 128
+    min_value: 1
+    max_value: 7
+    step: 1
+    disabled_by_default: true
+  - platform: tuya
+    name: "Минимальная скорость авто (DP129)"
+    number_datapoint: 129
+    min_value: 0
+    max_value: 1
+    step: 1
+    disabled_by_default: true
+  - platform: tuya
+    name: "Целевой уровень CO2 (DP130)"
+    number_datapoint: 130
+    min_value: 400
+    max_value: 1500
+    step: 50
+    unit_of_measurement: "ppm"
+    disabled_by_default: true
+  - platform: tuya
+    name: "Период замены фильтра (DP134)"
+    number_datapoint: 134
+    min_value: 1
+    max_value: 365
+    step: 1
+    unit_of_measurement: "дней"
+
+select:
+  - platform: tuya
+    name: "Яркость панели (DP104)"
+    enum_datapoint: 104
+    options:
+      0: "0 процентов"
+      1: "50 процентов"
+      2: "100 процентов"
+  - platform: tuya
+    name: "Скорость голосовых сообщений (DP125)"
+    enum_datapoint: 125
+    options:
+      0: "Скорость 1"
+      1: "Скорость 2"
+      2: "Скорость 3"
+      3: "Скорость 4"
+      4: "Скорость 5"
+      5: "Скорость 6"
+      6: "Скорость 7"
+    disabled_by_default: true
+  - platform: tuya
+    name: "Цвет панели (DP133)"
+    enum_datapoint: 133
+    options:
+      0: "Цвет 1"
+      1: "Цвет 2"
+      2: "Цвет 3"
+      3: "Цвет 4"
+      4: "Цвет 5"
+
+sensor:
+  - platform: tuya
+    name: "Концентрация CO2 (DP106)"
+    sensor_datapoint: 106
+    unit_of_measurement: "ppm"
+    accuracy_decimals: 0
+    icon: mdi:molecule-co2
+    disabled_by_default: true
+  - platform: tuya
+    id: tion_inside_temperature
+    name: "Температура внутри (DP108)"
+    sensor_datapoint: 108
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    device_class: temperature
+    internal: true
+  - platform: tuya
+    name: "Температура снаружи (DP112)"
+    sensor_datapoint: 112
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    device_class: temperature
+  - platform: tuya
+    name: "Время работы бризера (DP113)"
+    sensor_datapoint: 113
+    unit_of_measurement: "s"
+    accuracy_decimals: 0
+    icon: mdi:timer-outline
+  - platform: tuya
+    name: "Остаток ресурса фильтра (DP115)"
+    sensor_datapoint: 115
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+  - platform: tuya
+    name: "Концентрация PM2.5 (DP116)"
+    sensor_datapoint: 116
+    accuracy_decimals: 0
+    icon: mdi:air-filter
+    disabled_by_default: true
+  - platform: tuya
+    id: tion_inside_humidity
+    name: "Влажность воздуха (DP119)"
+    sensor_datapoint: 119
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    device_class: humidity
+    internal: true
+  - platform: tuya
+    name: "Мощность нагревателя (DP120)"
+    sensor_datapoint: 120
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+  - platform: tuya
+    name: "Температура помещения (DP126)"
+    sensor_datapoint: 126
+    unit_of_measurement: "°C"
+    accuracy_decimals: 0
+    device_class: temperature
+    disabled_by_default: true
+  - platform: wifi_signal
+    name: "Уровень сигнала Wi-Fi (ESP-001)"
+    update_interval: 60s
+    unit_of_measurement: "dBm"
+  - platform: uptime
+    name: "Время работы ESP (ESP-002)"
+    update_interval: 60s
+    unit_of_measurement: "s"
+
+binary_sensor:
+  - platform: tuya
+    name: "Нагреватель включен (DP117)"
+    sensor_datapoint: 117
+    device_class: heat
+
+text_sensor:
+  - platform: template
+    name: "Тип нагревателя (DP118)"
+    id: dp118_state
+    update_interval: never
+    disabled_by_default: true
+  - platform: template
+    name: "Состояние датчика CO2 (DP122)"
+    id: dp122_state
+    update_interval: never
+    disabled_by_default: true
+  - platform: template
+    name: "Состояние датчика PM2.5 (DP123)"
+    id: dp123_state
+    update_interval: never
+    disabled_by_default: true
+  - platform: template
+    name: "Состояние датчика температуры и влажности (DP124)"
+    id: dp124_state
+    update_interval: never
+  - platform: template
+    name: "Диагностика ошибок бризера (DP127)"
+    id: dp127_state
+    update_interval: never
+  - platform: wifi_info
+    ip_address:
+      name: "IP-адрес бризера (ESP-003)"
+  - platform: debug
+    reset_reason:
+      name: "Причина перезагрузки ESP (ESP-004)"
+
+button:
+  - platform: template
+    name: "Сброс к заводским настройкам (DP109)"
+    icon: mdi:factory
+    disabled_by_default: true
+    on_press:
+      - lambda: |-
+          ESP_LOGW("TION", "DP109 — Команда сброса к заводским настройкам");
+          id(tion_tuya).force_set_boolean_datapoint_value(109, true);
+  - platform: template
+    name: "Сброс счётчика фильтра (DP110)"
+    icon: mdi:filter-refresh
+    on_press:
+      - lambda: |-
+          ESP_LOGI("TION", "DP110 — Команда сброса счётчика фильтра");
+          id(tion_tuya).force_set_boolean_datapoint_value(110, true);
+  - platform: template
+    name: "Ручная калибровка CO2 (DP135)"
+    icon: mdi:calibrate
+    disabled_by_default: true
+    on_press:
+      - lambda: |-
+          ESP_LOGI("TION", "DP135 — Команда ручной калибровки CO2");
+          id(tion_tuya).force_set_boolean_datapoint_value(135, true);
+  - platform: restart
+    name: "Перезагрузить контроллер ESP (ESP-005)"
+    entity_category: diagnostic
+
+climate:
+  - platform: template
+    id: tion_climate
+    name: "Климат TION Bio X (DP101/102/105/108/114)"
+    icon: mdi:hvac
+    sensor: tion_inside_temperature
+    supported_modes:
+      - "OFF"
+      - FAN_ONLY
+      - HEAT
+    custom_fan_modes:
+      - "1"
+      - "2"
+      - "3"
+      - "4"
+      - "5"
+      - "6"
+      - "7"
+    visual:
+      min_temperature: 0
+      max_temperature: 30
+      temperature_step: 1
+    optimistic: true
+    restore_mode: NO_RESTORE
+    initial_state:
+      mode: "OFF"
+      target_temperature: 20
+      custom_fan_mode: "1"
+    set_mode_action:
+      - lambda: |-
+          if (x == climate::CLIMATE_MODE_OFF) {
+            id(tion_heater).turn_off();
+            id(tion_power).turn_off();
+            ESP_LOGI("TION", "Climate: OFF");
+          } else if (x == climate::CLIMATE_MODE_HEAT) {
+            id(tion_power).turn_on();
+            id(tion_heater).turn_on();
+            ESP_LOGI("TION", "Climate: HEAT");
+          } else if (x == climate::CLIMATE_MODE_FAN_ONLY) {
+            id(tion_heater).turn_off();
+            id(tion_power).turn_on();
+            ESP_LOGI("TION", "Climate: FAN_ONLY");
+          }
+    set_target_temperature_action:
+      - number.set:
+          id: tion_target_temperature
+          value: !lambda |-
+            return x;
+    set_custom_fan_mode_action:
+      - number.set:
+          id: tion_fan_speed
+          value: !lambda |-
+            return x.c_str()[0] - '0';
+
+debug:
+  update_interval: 30s
