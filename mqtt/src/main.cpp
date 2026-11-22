@@ -3,7 +3,6 @@
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
 #include <PubSubClient.h>
-#include <ArduinoOTA.h>
 
 #include "app_config.h"
 #include "device_config.h"
@@ -37,14 +36,6 @@ uint32_t last_wifi_retry = 0;
 uint8_t wifi_attempts = 0;
 bool discovery_sent = false;
 bool ap_active = false;
-bool ota_started = false;
-
-void startOta() {
-  if (ota_started || WiFi.status() != WL_CONNECTED) return;
-  ArduinoOTA.setHostname("tion-biox-01");
-  ArduinoOTA.begin();
-  ota_started = true;
-}
 
 String baseTopic() {
   return String(TION_MQTT_PREFIX) + "/" + TION_DEVICE_ID + "/";
@@ -80,7 +71,7 @@ void publishDatapoint(uint8_t id) {
 }
 
 void publishDiscoveryDatapoint(uint8_t id) {
-  if (!mqtt.connected() || !tion_model.has(id)) return;
+  if (!mqtt.connected() || !tion_model.supports(id)) return;
   char topic[160];
   char payload[512];
   snprintf(topic, sizeof(topic), "%s/sensor/%s/dp_%u/config",
@@ -163,9 +154,10 @@ void publishDiscovery() {
   publishDiscoverySensor("free_heap", "TION ESP free heap",
                          "free_heap", "B", "mdi:memory");
 
-  // TION datapoint entities are added as soon as the appliance reports them.
+  // Publish the complete profile entity set before TION UART is connected.
+  // Entities without a received state remain unknown in Home Assistant.
   for (uint8_t id = 101; id <= 136; ++id) {
-    if (!tion_model.has(id)) continue;
+    if (!tion_model.supports(id)) continue;
     publishDiscoveryDatapoint(id);
     yield();
   }
@@ -186,13 +178,9 @@ void onDatapoint(uint8_t id, uint8_t type, const uint8_t *data,
                  uint16_t length) {
   TuyaDatapoint decoded;
   if (!decodeTuyaDatapoint(id, type, data, length, decoded)) return;
-  const bool was_known = tion_model.has(id);
   if (!tion_model.update(decoded)) return;
-  if (mqtt.connected() && discovery_sent && !was_known) {
-    publishDiscoveryDatapoint(id);
-  } else {
-    publishDatapoint(id);
-  }
+  // Discovery for every supported datapoint was already published at MQTT connect.
+  publishDatapoint(id);
 }
 
 void handleRoot() {
@@ -428,8 +416,6 @@ void loop() {
   tion_uart.loop();
 
   if (WiFi.status() == WL_CONNECTED) {
-    startOta();
-    if (ota_started) ArduinoOTA.handle();
     if (!mqtt.connected() && millis() - last_mqtt_attempt >= kMqttRetryMs) {
       last_mqtt_attempt = millis();
       connectMqtt();
