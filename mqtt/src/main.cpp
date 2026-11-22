@@ -166,7 +166,9 @@ void handleRoot() {
     page += htmlEscape(String(device_config.wifi_ssid));
     page += F(" (сохранённая сеть)</option>");
   }
-  page += F("</select><label>Пароль Wi-Fi</label>"
+  page += F("</select><label>Или введите SSID вручную</label>"
+            "<input name='ssid_manual' maxlength='32' placeholder='Имя Wi-Fi сети'>"
+            "<label>Пароль Wi-Fi</label>"
             "<input name='wifi_password' type='password' maxlength='64' "
             "autocomplete='new-password' placeholder='Оставьте пустым для открытой сети'>"
             "<small>При повторной настройке введите пароль заново.</small>"
@@ -194,7 +196,10 @@ void handleSave() {
     web.send(400, "text/plain; charset=utf-8", "Не заполнены обязательные поля");
     return;
   }
-  const String ssid = web.arg("ssid");
+  String ssid = web.arg("ssid");
+  if (web.hasArg("ssid_manual") && web.arg("ssid_manual").length() > 0) {
+    ssid = web.arg("ssid_manual");
+  }
   const String wifi_password = web.arg("wifi_password");
   const String host = web.arg("mqtt_host");
   const String port_text = web.arg("mqtt_port");
