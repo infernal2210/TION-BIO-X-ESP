@@ -18,4 +18,6 @@ namespace ConfigStore {
   bool load(DeviceConfig &config);
   bool save(const DeviceConfig &config);
   void setDefaults(DeviceConfig &config);
+  bool loadOtaPassword(String &password);
+  bool saveOtaPassword(const String &password);
 }
