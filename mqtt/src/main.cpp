@@ -299,13 +299,26 @@ void maintainWifi() {
   }
 
   const uint32_t now = millis();
+
+  // Once the setup AP is active, retry the saved network independently.
+  // Do not let the initial five-attempt counter starve this 30-second retry.
+  if (ap_active) {
+    if (now - last_wifi_retry >= kWifiRetryAfterPortalMs) {
+      last_wifi_retry = now;
+      WiFi.disconnect();
+      WiFi.begin(device_config.wifi_ssid, device_config.wifi_password);
+      wifi_attempt_started = now;
+    }
+    return;
+  }
+
   if (wifi_attempts == 0) {
     wifi_attempts = 1;
     WiFi.begin(device_config.wifi_ssid, device_config.wifi_password);
     wifi_attempt_started = now;
     return;
   }
-  if (wifi_attempts > 0 && wifi_attempts < kMaxWifiAttempts &&
+  if (wifi_attempts < kMaxWifiAttempts &&
       now - wifi_attempt_started >= kWifiAttemptTimeoutMs) {
     ++wifi_attempts;
     WiFi.disconnect();
@@ -314,13 +327,7 @@ void maintainWifi() {
   } else if (wifi_attempts == kMaxWifiAttempts &&
              now - wifi_attempt_started >= kWifiAttemptTimeoutMs) {
     startPortal();
-    wifi_attempt_started = now;
     last_wifi_retry = now;
-  } else if (ap_active && now - last_wifi_retry >= kWifiRetryAfterPortalMs) {
-    last_wifi_retry = now;
-    WiFi.disconnect();
-    WiFi.begin(device_config.wifi_ssid, device_config.wifi_password);
-    wifi_attempt_started = now;
   }
 }
 
