@@ -8,6 +8,10 @@
 
 История изменений: [`CHANGELOG.md`](CHANGELOG.md).
 
+## Подключение оборудования
+
+Схема подключения ESP-01 к плате TION Bio X, распиновка UART и требования к питанию: [`docs/hardware.md`](docs/hardware.md).
+
 ## Версии прошивки
 
 ### Full
