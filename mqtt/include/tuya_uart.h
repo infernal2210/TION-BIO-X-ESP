@@ -25,6 +25,7 @@ class TuyaUart {
     WAIT_HEARTBEAT,
     WAIT_PRODUCT,
     WAIT_CONFIG,
+    WAIT_WIFI_STATE,
     WAIT_DATAPOINTS,
     READY
   };
