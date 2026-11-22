@@ -16,12 +16,11 @@ pio run -e tion_biox_full
 
 ## OTA updates
 
-The ESP-01 1 MB build uses `eagle.flash.1m64.ld`, reserving 64 KB for the unused filesystem area and providing an OTA-capable application layout. The OTA listener starts only after a separate OTA password (8–32 characters) has been saved on the device configuration page. The password is stored in a dedicated EEPROM area and is not committed to the repository.
+The ESP-01 1 MB build uses `eagle.flash.1m64.ld` and an OTA-capable application layout. OTA starts automatically after Wi-Fi connects and does not require an OTA password. This is convenient for a trusted, isolated home LAN, but any device with network access to the ESP-01 may attempt a firmware update.
 
-After installing this firmware once over USB, open the device page at its LAN IP and set the OTA password. In the same PowerShell window used by VS Code, set the matching environment variable (do not send it in chat):
+After installing this firmware once over USB, update it over the local network with:
 
 ```powershell
-$env:OTA_PASSWORD = "your-private-ota-password"
 python -m platformio run -e tion_biox_lite_ota -t upload --upload-port 192.168.1.xxx
 ```
 
