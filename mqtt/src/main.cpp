@@ -755,7 +755,7 @@ void connectMqtt() {
 void setup() {
   ConfigStore::load(device_config);
   mqtt.setServer(device_config.mqtt_host, device_config.mqtt_port);
-  mqtt.setBufferSize(768);
+  mqtt.setBufferSize(1024);
   mqtt.setCallback(onMqttMessage);
 
   setupWeb();
