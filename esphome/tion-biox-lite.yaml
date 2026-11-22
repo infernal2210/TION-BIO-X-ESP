@@ -303,7 +303,7 @@ button:
           id(tion_tuya).force_set_boolean_datapoint_value(109, true);
   - platform: template
     name: "Сброс счётчика фильтра"
-    icon: mdi:filter-refresh
+    icon: mdi:filter
     on_press:
       - lambda: |-
           ESP_LOGI("TION", "DP110 — Команда сброса счётчика фильтра");
