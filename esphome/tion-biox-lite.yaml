@@ -102,6 +102,20 @@ tuya:
               if (id(tion_heater_state)) return climate::CLIMATE_MODE_HEAT;
               return climate::CLIMATE_MODE_FAN_ONLY;
 
+    - sensor_datapoint: 113
+      datapoint_type: int
+      then:
+        - lambda: |-
+            const uint32_t total_minutes = static_cast<uint32_t>(x) / 60;
+            const uint32_t hours = total_minutes / 60;
+            const uint32_t minutes = total_minutes % 60;
+            char runtime[32];
+            snprintf(runtime, sizeof(runtime), "%lu ч %02lu мин",
+              static_cast<unsigned long>(hours),
+              static_cast<unsigned long>(minutes));
+            id(dp113_runtime).publish_state(runtime);
+            ESP_LOGI("TION", "DP113 — Время работы: %s", runtime);
+
     - sensor_datapoint: 114
       datapoint_type: int
       then:
@@ -140,31 +154,31 @@ tuya:
 switch:
   - platform: tuya
     id: tion_power
-    name: "Питание бризера (DP101)"
+    name: "Питание бризера"
     switch_datapoint: 101
     internal: true
   - platform: tuya
-    name: "Звуковые сигналы (DP103)"
+    name: "Звуковые сигналы"
     entity_category: config
     switch_datapoint: 103
     icon: mdi:volume-high
   - platform: tuya
     id: tion_heater
-    name: "Подогрев воздуха (DP105)"
+    name: "Подогрев воздуха"
     switch_datapoint: 105
     inverted: true
     internal: true
   - platform: tuya
-    name: "Режим рециркуляции (DP107)"
+    name: "Режим рециркуляции"
     switch_datapoint: 107
     icon: mdi:autorenew
   - platform: tuya
-    name: "Детская блокировка (DP111)"
+    name: "Детская блокировка"
     entity_category: config
     switch_datapoint: 111
     icon: mdi:lock
   - platform: tuya
-    name: "Ночной режим (DP132)"
+    name: "Ночной режим"
     entity_category: config
     switch_datapoint: 132
     icon: mdi:weather-night
@@ -172,7 +186,7 @@ switch:
 number:
   - platform: tuya
     id: tion_fan_speed
-    name: "Скорость вентиляции (DP102)"
+    name: "Скорость вентиляции"
     number_datapoint: 102
     min_value: 1
     max_value: 7
@@ -181,7 +195,7 @@ number:
     internal: true
   - platform: tuya
     id: tion_target_temperature
-    name: "Заданная температура подогрева (DP114)"
+    name: "Заданная температура подогрева"
     number_datapoint: 114
     min_value: 0
     max_value: 30
@@ -189,7 +203,7 @@ number:
     unit_of_measurement: "°C"
     internal: true
   - platform: tuya
-    name: "Период замены фильтра (DP134)"
+    name: "Период замены фильтра"
     entity_category: config
     number_datapoint: 134
     min_value: 1
@@ -200,7 +214,7 @@ number:
 
 select:
   - platform: tuya
-    name: "Яркость панели (DP104)"
+    name: "Яркость панели"
     entity_category: config
     enum_datapoint: 104
     options:
@@ -208,7 +222,7 @@ select:
       1: "50 процентов"
       2: "100 процентов"
   - platform: tuya
-    name: "Цвет панели (DP133)"
+    name: "Цвет панели"
     entity_category: config
     enum_datapoint: 133
     options:
@@ -221,37 +235,30 @@ select:
 sensor:
   - platform: tuya
     id: tion_inside_temperature
-    name: "Температура внутри (DP108)"
+    name: "Температура внутри"
     sensor_datapoint: 108
     unit_of_measurement: "°C"
     accuracy_decimals: 0
     device_class: temperature
     internal: true
   - platform: tuya
-    name: "Температура снаружи (DP112)"
+    name: "Температура снаружи"
     sensor_datapoint: 112
     unit_of_measurement: "°C"
     accuracy_decimals: 0
     device_class: temperature
   - platform: tuya
-    name: "Время работы бризера (DP113)"
-    entity_category: diagnostic
-    sensor_datapoint: 113
-    unit_of_measurement: "s"
-    accuracy_decimals: 0
-    icon: mdi:timer-outline
-  - platform: tuya
-    name: "Остаток ресурса фильтра (DP115)"
+    name: "Остаток ресурса фильтра"
     sensor_datapoint: 115
     unit_of_measurement: "%"
     accuracy_decimals: 0
   - platform: wifi_signal
-    name: "Уровень сигнала Wi-Fi (ESP-001)"
+    name: "Уровень сигнала Wi-Fi"
     entity_category: diagnostic
     update_interval: 60s
     unit_of_measurement: "dBm"
   - platform: uptime
-    name: "Время работы ESP (ESP-002)"
+    name: "Время работы ESP"
     entity_category: diagnostic
     update_interval: 60s
     unit_of_measurement: "s"
@@ -260,27 +267,33 @@ binary_sensor:
 
 text_sensor:
   - platform: template
-    name: "Тип нагревателя (DP118)"
+    name: "Время работы бризера"
+    id: dp113_runtime
+    entity_category: diagnostic
+    update_interval: never
+    icon: mdi:timer-outline
+  - platform: template
+    name: "Тип нагревателя"
     id: dp118_state
     update_interval: never
     disabled_by_default: true
   - platform: template
-    name: "Диагностика ошибок бризера (DP127)"
+    name: "Диагностика ошибок бризера"
     entity_category: diagnostic
     id: dp127_state
     update_interval: never
   - platform: wifi_info
     ip_address:
-      name: "IP-адрес бризера (ESP-003)"
+      name: "IP-адрес бризера"
       entity_category: diagnostic
   - platform: debug
     reset_reason:
-      name: "Причина перезагрузки ESP (ESP-004)"
+      name: "Причина перезагрузки ESP"
       entity_category: diagnostic
 
 button:
   - platform: template
-    name: "Сброс к заводским настройкам (DP109)"
+    name: "Сброс к заводским настройкам"
     entity_category: config
     icon: mdi:factory
     disabled_by_default: true
@@ -289,20 +302,20 @@ button:
           ESP_LOGW("TION", "DP109 — Команда сброса к заводским настройкам");
           id(tion_tuya).force_set_boolean_datapoint_value(109, true);
   - platform: template
-    name: "Сброс счётчика фильтра (DP110)"
+    name: "Сброс счётчика фильтра"
     icon: mdi:filter-refresh
     on_press:
       - lambda: |-
           ESP_LOGI("TION", "DP110 — Команда сброса счётчика фильтра");
           id(tion_tuya).force_set_boolean_datapoint_value(110, true);
   - platform: restart
-    name: "Перезагрузить контроллер ESP (ESP-005)"
+    name: "Перезагрузить контроллер ESP"
     entity_category: diagnostic
 
 climate:
   - platform: template
     id: tion_climate
-    name: "Климат TION Bio X (DP101/102/105/108/114)"
+    name: "Климат TION Bio X"
     icon: mdi:hvac
     sensor: tion_inside_temperature
     supported_modes:
