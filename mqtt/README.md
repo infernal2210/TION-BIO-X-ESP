@@ -51,8 +51,11 @@ therefore appears in Home Assistant while the ESP is still on the USB bench.
 
 Diagnostic entities report Wi-Fi RSSI, ESP IP address, UART initialization
 state, valid UART frames, checksum errors, framing errors, and free heap.
-All datapoint entities supported by the selected profile are discovered immediately, even with the appliance disconnected. Until the first value arrives, their state is `unknown`. At this diagnostic stage, datapoints are exposed as generic numeric sensors named `TION DP <id>`; these are raw Tuya values, not human-friendly controls.
-No MQTT commands are accepted and no control datapoints are transmitted.
+All datapoint entities supported by the selected profile are discovered immediately, even with the appliance disconnected. Until the first value arrives, their state is `unknown`. The Lite profile publishes Russian names, units, binary sensors, switches, select/number settings, diagnostic entities, reset buttons, and a Home Assistant MQTT climate entity.
+
+Climate modes are `off`, `fan_only`, and `heat`; target temperature is DP114 (0–30 °C), fan speed is DP102 (1–7), current temperature is DP108. Writable controls include sound (DP103), inflow/recirculation (DP107), child lock (DP111), night mode (DP132), panel brightness (DP104), panel color (DP133), filter interval (DP134), and filter counter reset (DP110). Factory reset (DP109) is disabled by default.
+
+MQTT commands are accepted only after the Tuya UART initialization receives a datapoint report. Commands are non-retained; retained command topics are cleared before subscription. State is updated from datapoint reports rather than optimistically.
 
 ## Hardware
 
