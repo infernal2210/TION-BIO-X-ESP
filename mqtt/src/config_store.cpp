@@ -30,7 +30,7 @@ uint32_t checksum(const DeviceConfig &config) {
 }
 
 bool terminated(const char *value, size_t size) {
-  return memchr(value, '\\0', size) != nullptr;
+  return memchr(value, '\0', size) != nullptr;
 }
 
 bool valid(const DeviceConfig &config) {
