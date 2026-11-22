@@ -144,7 +144,7 @@ switch:
     switch_datapoint: 101
     internal: true
   - platform: tuya
-    name: "Управление — Звуковые сигналы (DP103)"
+    name: "Звуковые сигналы (DP103)"
     switch_datapoint: 103
     icon: mdi:volume-high
   - platform: tuya
@@ -154,15 +154,15 @@ switch:
     inverted: true
     internal: true
   - platform: tuya
-    name: "Управление — Режим рециркуляции (DP107)"
+    name: "Режим рециркуляции (DP107)"
     switch_datapoint: 107
     icon: mdi:autorenew
   - platform: tuya
-    name: "Управление — Детская блокировка (DP111)"
+    name: "Детская блокировка (DP111)"
     switch_datapoint: 111
     icon: mdi:lock
   - platform: tuya
-    name: "Управление — Ночной режим (DP132)"
+    name: "Ночной режим (DP132)"
     switch_datapoint: 132
     icon: mdi:weather-night
 
@@ -186,7 +186,7 @@ number:
     unit_of_measurement: "°C"
     internal: true
   - platform: tuya
-    name: "Настройка — Период замены фильтра (DP134)"
+    name: "Период замены фильтра (DP134)"
     number_datapoint: 134
     min_value: 1
     max_value: 365
@@ -196,14 +196,14 @@ number:
 
 select:
   - platform: tuya
-    name: "Настройка — Яркость панели (DP104)"
+    name: "Яркость панели (DP104)"
     enum_datapoint: 104
     options:
       0: "0 процентов"
       1: "50 процентов"
       2: "100 процентов"
   - platform: tuya
-    name: "Настройка — Цвет панели (DP133)"
+    name: "Цвет панели (DP133)"
     enum_datapoint: 133
     options:
       0: "Цвет 1"
@@ -222,28 +222,28 @@ sensor:
     device_class: temperature
     internal: true
   - platform: tuya
-    name: "Диагностика — Температура снаружи (DP112)"
+    name: "Температура снаружи (DP112)"
     sensor_datapoint: 112
     unit_of_measurement: "°C"
     accuracy_decimals: 0
     device_class: temperature
   - platform: tuya
-    name: "Диагностика — Время работы бризера (DP113)"
+    name: "Время работы бризера (DP113)"
     sensor_datapoint: 113
     unit_of_measurement: "s"
     accuracy_decimals: 0
     icon: mdi:timer-outline
   - platform: tuya
-    name: "Диагностика — Остаток ресурса фильтра (DP115)"
+    name: "Остаток ресурса фильтра (DP115)"
     sensor_datapoint: 115
     unit_of_measurement: "%"
     accuracy_decimals: 0
   - platform: wifi_signal
-    name: "Диагностика — Уровень сигнала Wi-Fi (ESP-001)"
+    name: "Уровень сигнала Wi-Fi (ESP-001)"
     update_interval: 60s
     unit_of_measurement: "dBm"
   - platform: uptime
-    name: "Диагностика — Время работы ESP (ESP-002)"
+    name: "Время работы ESP (ESP-002)"
     update_interval: 60s
     unit_of_measurement: "s"
 
@@ -256,19 +256,19 @@ text_sensor:
     update_interval: never
     disabled_by_default: true
   - platform: template
-    name: "Диагностика — Ошибки бризера (DP127)"
+    name: "Диагностика ошибок бризера (DP127)"
     id: dp127_state
     update_interval: never
   - platform: wifi_info
     ip_address:
-      name: "Сервис — IP-адрес бризера (ESP-003)"
+      name: "IP-адрес бризера (ESP-003)"
   - platform: debug
     reset_reason:
-      name: "Диагностика — Причина перезагрузки ESP (ESP-004)"
+      name: "Причина перезагрузки ESP (ESP-004)"
 
 button:
   - platform: template
-    name: "Сервис — Сброс к заводским настройкам (DP109)"
+    name: "Сброс к заводским настройкам (DP109)"
     icon: mdi:factory
     disabled_by_default: true
     on_press:
@@ -276,20 +276,20 @@ button:
           ESP_LOGW("TION", "DP109 — Команда сброса к заводским настройкам");
           id(tion_tuya).force_set_boolean_datapoint_value(109, true);
   - platform: template
-    name: "Сервис — Сброс счётчика фильтра (DP110)"
+    name: "Сброс счётчика фильтра (DP110)"
     icon: mdi:filter-refresh
     on_press:
       - lambda: |-
           ESP_LOGI("TION", "DP110 — Команда сброса счётчика фильтра");
           id(tion_tuya).force_set_boolean_datapoint_value(110, true);
   - platform: restart
-    name: "Сервис — Перезагрузить контроллер ESP (ESP-005)"
+    name: "Перезагрузить контроллер ESP (ESP-005)"
     entity_category: diagnostic
 
 climate:
   - platform: template
     id: tion_climate
-    name: "Управление — Климат TION Bio X (DP101/102/105/108/114)"
+    name: "Климат TION Bio X (DP101/102/105/108/114)"
     icon: mdi:hvac
     sensor: tion_inside_temperature
     supported_modes:
