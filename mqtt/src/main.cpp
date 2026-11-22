@@ -73,8 +73,8 @@ const char *entityCategory(uint8_t id) {
   // Home Assistant supports only the built-in config and diagnostic categories.
   // Control entities stay uncategorized (the normal controls section).
   switch (id) {
-    case 104: case 109: case 110: case 118: case 128:
-    case 129: case 130: case 133: case 134: case 135: case 136:
+    case 103: case 104: case 109: case 110: case 111: case 118: case 128:
+    case 129: case 130: case 132: case 133: case 134: case 135: case 136:
       return "config";
     case 106: case 108: case 112: case 113: case 115: case 116:
     case 122: case 123: case 124: case 127:
