@@ -187,6 +187,7 @@ number:
     internal: true
   - platform: tuya
     name: "Период замены фильтра (DP134)"
+    entity_category: config
     number_datapoint: 134
     min_value: 1
     max_value: 365
@@ -197,6 +198,7 @@ number:
 select:
   - platform: tuya
     name: "Яркость панели (DP104)"
+    entity_category: config
     enum_datapoint: 104
     options:
       0: "0 процентов"
@@ -204,6 +206,7 @@ select:
       2: "100 процентов"
   - platform: tuya
     name: "Цвет панели (DP133)"
+    entity_category: config
     enum_datapoint: 133
     options:
       0: "Цвет 1"
@@ -223,27 +226,32 @@ sensor:
     internal: true
   - platform: tuya
     name: "Температура снаружи (DP112)"
+    entity_category: diagnostic
     sensor_datapoint: 112
     unit_of_measurement: "°C"
     accuracy_decimals: 0
     device_class: temperature
   - platform: tuya
     name: "Время работы бризера (DP113)"
+    entity_category: diagnostic
     sensor_datapoint: 113
     unit_of_measurement: "s"
     accuracy_decimals: 0
     icon: mdi:timer-outline
   - platform: tuya
     name: "Остаток ресурса фильтра (DP115)"
+    entity_category: diagnostic
     sensor_datapoint: 115
     unit_of_measurement: "%"
     accuracy_decimals: 0
   - platform: wifi_signal
     name: "Уровень сигнала Wi-Fi (ESP-001)"
+    entity_category: diagnostic
     update_interval: 60s
     unit_of_measurement: "dBm"
   - platform: uptime
     name: "Время работы ESP (ESP-002)"
+    entity_category: diagnostic
     update_interval: 60s
     unit_of_measurement: "s"
 
@@ -257,18 +265,22 @@ text_sensor:
     disabled_by_default: true
   - platform: template
     name: "Диагностика ошибок бризера (DP127)"
+    entity_category: diagnostic
     id: dp127_state
     update_interval: never
   - platform: wifi_info
     ip_address:
       name: "IP-адрес бризера (ESP-003)"
+      entity_category: diagnostic
   - platform: debug
     reset_reason:
       name: "Причина перезагрузки ESP (ESP-004)"
+      entity_category: diagnostic
 
 button:
   - platform: template
     name: "Сброс к заводским настройкам (DP109)"
+    entity_category: config
     icon: mdi:factory
     disabled_by_default: true
     on_press:
@@ -277,6 +289,7 @@ button:
           id(tion_tuya).force_set_boolean_datapoint_value(109, true);
   - platform: template
     name: "Сброс счётчика фильтра (DP110)"
+    entity_category: config
     icon: mdi:filter-refresh
     on_press:
       - lambda: |-
