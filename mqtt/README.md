@@ -29,8 +29,25 @@ The real credentials file is intentionally excluded from Git. Create
 
 The MQTT broker defaults to `192.168.1.10:1883`. Device identity and
 Home Assistant discovery prefix are in `include/app_config.h`.
-The current firmware stage uses compile-time Wi-Fi/MQTT credentials;
-the captive-portal provisioning interface is a later stage.
+On first boot (or when no valid settings are stored), the device starts
+the setup access point:
+
+- SSID: `TION-BIOX-01`
+- Password: `tionbiox01`
+- Setup page: `http://192.168.4.1/`
+
+The page scans nearby Wi-Fi networks and also allows manual SSID entry.
+Enter the Wi-Fi password and MQTT host/port/username/password, then save.
+The device restarts and connects using the stored settings. If the saved
+network cannot be reached after five 15-second attempts, the setup AP starts
+while the device continues retrying the saved network every 30 seconds.
+When Wi-Fi reconnects, the setup AP is disabled.
+
+The same status/configuration page is available at the device's current
+LAN IP while connected. Configuration is stored in EEPROM emulation with
+a checksum and version marker. Passwords are stored unencrypted in Flash.
+The setup AP password is a fixed initial password; change it in source
+before deployment in an untrusted environment.
 
 ## MQTT telemetry
 
