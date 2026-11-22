@@ -242,7 +242,7 @@ void handleRoot() {
             "<label>Пароль OTA (обновление по Wi-Fi)</label>"
             "<input name='ota_password' type='password' minlength='8' maxlength='32' "
             "autocomplete='new-password' placeholder='Задайте пароль от 8 до 32 символов'>"
-            "<small>Пустое поле сохраняет прежний пароль. Если пароль ещё не задан, OTA выключено.</small>""
+            "<small>Пустое поле сохраняет прежний пароль. Если пароль ещё не задан, OTA выключено.</small>"
             "<button type='submit'>Сохранить и перезагрузить</button></form>"
             "<p><small>Настройки хранятся во Flash устройства. Пароли не шифруются.</small></p>"
             "</main></html>");
