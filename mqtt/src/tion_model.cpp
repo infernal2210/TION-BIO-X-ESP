@@ -92,6 +92,10 @@ bool TionModel::update(const TuyaDatapoint &dp) {
   return true;
 }
 
+bool TionModel::supports(uint8_t id) const {
+  return id <= kMaxDpId && isKnown(id);
+}
+
 bool TionModel::has(uint8_t id) const {
   return id <= kMaxDpId && states_[id].received;
 }
