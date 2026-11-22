@@ -169,7 +169,7 @@ switch:
     inverted: true
     internal: true
   - platform: tuya
-    name: "Режим рециркуляции"
+    name: "Режим рециркуляции "
     switch_datapoint: 107
     icon: mdi:autorenew
   - platform: tuya
