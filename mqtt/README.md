@@ -14,23 +14,11 @@ pio run -e tion_biox_lite
 pio run -e tion_biox_full
 ```
 
-## Local Wi-Fi credentials
+## First boot setup
 
-The real credentials file is intentionally excluded from Git. Create
-`mqtt/include/secrets.h` locally (do not commit it):
-
-```cpp
-#pragma once
-#define TION_WIFI_SSID "YOUR_WIFI_NAME"
-#define TION_WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
-#define TION_MQTT_USERNAME "YOUR_MQTT_USER"
-#define TION_MQTT_PASSWORD "YOUR_MQTT_PASSWORD"
-```
-
-The MQTT broker defaults to `192.168.1.10:1883`. Device identity and
-Home Assistant discovery prefix are in `include/app_config.h`.
-On first boot (or when no valid settings are stored), the device starts
-the setup access point:
+No Wi-Fi or MQTT credentials are compiled into the firmware. On first boot
+(or when no valid settings are stored), the device starts the setup access
+point:
 
 - SSID: `TION-BIOX-01`
 - Password: `tionbiox01`
@@ -38,14 +26,15 @@ the setup access point:
 
 The page scans nearby Wi-Fi networks and also allows manual SSID entry.
 Enter the Wi-Fi password and MQTT host/port/username/password, then save.
-The device restarts and connects using the stored settings. If the saved
-network cannot be reached after five 15-second attempts, the setup AP starts
-while the device continues retrying the saved network every 30 seconds.
-When Wi-Fi reconnects, the setup AP is disabled.
+The device restarts and connects using the stored settings. The default
+broker is `192.168.1.10:1883`. If the saved network cannot be reached after
+five 15-second attempts, the setup AP starts while the device continues
+retrying the saved network every 30 seconds. When Wi-Fi reconnects, the setup
+AP is disabled.
 
-The same status/configuration page is available at the device's current
-LAN IP while connected. Configuration is stored in EEPROM emulation with
-a checksum and version marker. Passwords are stored unencrypted in Flash.
+The same status/configuration page is available at the device's current LAN
+IP while connected. Configuration is stored in EEPROM emulation with a
+checksum and version marker. Passwords are stored unencrypted in Flash.
 The setup AP password is a fixed initial password; change it in source
 before deployment in an untrusted environment.
 
