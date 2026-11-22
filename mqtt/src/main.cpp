@@ -139,7 +139,7 @@ void handleRoot() {
   page += F("<br>MQTT: ");
   page += mqtt.connected() ? F("подключено") : F("не подключено");
   page += F("</p><form method='post' action='/save'>"
-            "<label>Wi-Fi сеть (SSID)</label><select name='ssid' required>");
+            "<label>Wi-Fi сеть (SSID)</label><select name='ssid'>");
   const int count = WiFi.scanNetworks(false, true);
   bool selected_found = false;
   for (int i = 0; i < count; ++i) {
