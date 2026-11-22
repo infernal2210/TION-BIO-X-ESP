@@ -7,6 +7,7 @@ constexpr uint8_t kHeader2 = 0xAA;
 constexpr uint8_t kHeartbeat = 0x00;
 constexpr uint8_t kProductQuery = 0x01;
 constexpr uint8_t kConfigQuery = 0x02;
+constexpr uint8_t kWifiState = 0x03;
 constexpr uint8_t kDatapointDeliver = 0x06;
 constexpr uint8_t kDatapointReportAsync = 0x07;
 constexpr uint8_t kDatapointQuery = 0x08;
@@ -114,6 +115,14 @@ void TuyaUart::processFrame() {
 
     case kConfigQuery:
       if (init_state_ == InitState::WAIT_CONFIG) {
+        init_state_ = InitState::WAIT_WIFI_STATE;
+        const uint8_t disconnected = 0x02;
+        sendCommand(kWifiState, &disconnected, 1);
+      }
+      break;
+
+    case kWifiState:
+      if (init_state_ == InitState::WAIT_WIFI_STATE) {
         init_state_ = InitState::WAIT_DATAPOINTS;
         sendEmptyCommand(kDatapointQuery);
       }
