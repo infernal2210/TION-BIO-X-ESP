@@ -70,6 +70,9 @@ struct DatapointInfo {
 };
 
 const DatapointInfo *datapointInfo(uint8_t id) {
+  static const DatapointInfo errorInfo =
+    { "Ошибка устройства", "sensor", "", "", "", "mdi:alert-circle" };
+  if (id == 127) return &errorInfo;
   static const DatapointInfo values[] = {
     { "Питание", "binary_sensor", "", "", "", "mdi:power" },
     { "Скорость вентиляции", "sensor", "", "", "measurement", "mdi:fan" },
@@ -189,16 +192,26 @@ void publishDiscoveryDatapoint(uint8_t id) {
       info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
       baseTopic().c_str(), info->icon, TION_DEVICE_ID, TION_DEVICE_NAME);
   } else {
+    char optional[160] = "";
+    if (strlen(info->device_class) > 0) {
+      snprintf(optional + strlen(optional), sizeof(optional) - strlen(optional),
+               ",\\"device_class\\":\\"%s\\"", info->device_class);
+    }
+    if (strlen(info->state_class) > 0) {
+      snprintf(optional + strlen(optional), sizeof(optional) - strlen(optional),
+               ",\\"state_class\\":\\"%s\\"", info->state_class);
+    }
     snprintf(payload, sizeof(payload),
       "{\\"name\\":\\"%s\\",\\"unique_id\\":\\"%s_dp_%u\\","
       "\\"state_topic\\":\\"%sstate/dp_%u\\","
       "\\"availability_topic\\":\\"%savailability\\","
-      "\\"icon\\":\\"%s\\",\\"unit_of_measurement\\":\\"%s\\","
+      "\\"icon\\":\\"%s\\",\\"unit_of_measurement\\":\\"%s\\"%s,"
       "\\"device\\":{\\"identifiers\\":[\\"%s\\"],"
       "\\"name\\":\\"%s\\",\\"manufacturer\\":\\"TION\\","
       "\\"model\\":\\"Bio X\\"}}",
       info->name, TION_DEVICE_ID, id, baseTopic().c_str(), id,
-      baseTopic().c_str(), info->icon, info->unit, TION_DEVICE_ID, TION_DEVICE_NAME);
+      baseTopic().c_str(), info->icon, info->unit, optional,
+      TION_DEVICE_ID, TION_DEVICE_NAME);
   }
   if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
 }
