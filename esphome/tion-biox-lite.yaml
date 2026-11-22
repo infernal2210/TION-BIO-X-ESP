@@ -289,7 +289,7 @@ button:
 climate:
   - platform: template
     id: tion_climate
-    name: "Климат TION Bio X (DP101/102/105/108/114)"
+    name: "Управление — Климат TION Bio X (DP101/102/105/108/114)"
     icon: mdi:hvac
     sensor: tion_inside_temperature
     supported_modes:
