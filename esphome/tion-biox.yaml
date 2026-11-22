@@ -348,12 +348,13 @@ select:
 
 sensor:
   - platform: tuya
-    name: "Концентрация CO2 (DP106)"
+    id: dp106_co2
+    name: "Концентрация CO2"
     sensor_datapoint: 106
     unit_of_measurement: "ppm"
     accuracy_decimals: 0
     icon: mdi:molecule-co2
-    disabled_by_default: true
+    internal: true
   - platform: tuya
     id: tion_inside_temperature
     name: "Температура внутри (DP108)"
@@ -363,56 +364,64 @@ sensor:
     device_class: temperature
     internal: true
   - platform: tuya
-    name: "Температура снаружи (DP112)"
+    name: "Температура снаружи"
     sensor_datapoint: 112
     unit_of_measurement: "°C"
     accuracy_decimals: 0
     device_class: temperature
   - platform: tuya
-    name: "Остаток ресурса фильтра (DP115)"
+    name: "Остаток ресурса фильтра"
     sensor_datapoint: 115
     unit_of_measurement: "%"
     accuracy_decimals: 0
   - platform: tuya
-    name: "Концентрация PM2.5 (DP116)"
+    id: dp116_pm25
+    name: "Концентрация PM2.5"
     sensor_datapoint: 116
     accuracy_decimals: 0
     icon: mdi:air-filter
-    disabled_by_default: true
+    internal: true
   - platform: tuya
-    id: tion_inside_humidity
-    name: "Влажность воздуха (DP119)"
+    id: dp119_humidity
+    name: "Влажность воздуха"
     sensor_datapoint: 119
     unit_of_measurement: "%"
     accuracy_decimals: 0
     device_class: humidity
     internal: true
   - platform: tuya
-    name: "Мощность нагревателя (DP120)"
+    id: dp120_heater_power
+    name: "Мощность нагревателя"
     sensor_datapoint: 120
+    disabled_by_default: true
     unit_of_measurement: "%"
     accuracy_decimals: 0
   - platform: tuya
-    name: "Температура помещения (DP126)"
+    id: dp126_room_temperature
+    name: "Температура помещения"
     sensor_datapoint: 126
     unit_of_measurement: "°C"
     accuracy_decimals: 0
     device_class: temperature
-    disabled_by_default: true
+    internal: true
   - platform: wifi_signal
-    name: "Уровень сигнала Wi-Fi (ESP-001)"
+    name: "Уровень сигнала Wi-Fi"
+    entity_category: diagnostic
     update_interval: 60s
     unit_of_measurement: "dBm"
   - platform: uptime
-    name: "Время работы ESP (ESP-002)"
+    name: "Время работы ESP"
+    entity_category: diagnostic
     update_interval: 60s
     unit_of_measurement: "s"
 
 binary_sensor:
   - platform: tuya
-    name: "Нагреватель включен (DP117)"
+    id: dp117_heater_on
+    name: "Нагреватель включен"
     sensor_datapoint: 117
     device_class: heat
+    disabled_by_default: true
 
 text_sensor:
   - platform: template
@@ -422,34 +431,38 @@ text_sensor:
     update_interval: never
     icon: mdi:timer-outline
   - platform: template
-    name: "Тип нагревателя (DP118)"
+    name: "Тип нагревателя"
     id: dp118_state
     update_interval: never
     disabled_by_default: true
   - platform: template
-    name: "Состояние датчика CO2 (DP122)"
+    name: "Состояние датчика CO2"
     id: dp122_state
     update_interval: never
-    disabled_by_default: true
+    internal: true
   - platform: template
-    name: "Состояние датчика PM2.5 (DP123)"
+    name: "Состояние датчика PM2.5"
     id: dp123_state
     update_interval: never
-    disabled_by_default: true
+    internal: true
   - platform: template
-    name: "Состояние датчика температуры и влажности (DP124)"
+    name: "Состояние датчика температуры и влажности"
     id: dp124_state
     update_interval: never
+    internal: true
   - platform: template
-    name: "Диагностика ошибок бризера (DP127)"
+    name: "Диагностика ошибок бризера"
+    entity_category: diagnostic
     id: dp127_state
     update_interval: never
   - platform: wifi_info
     ip_address:
-      name: "IP-адрес бризера (ESP-003)"
+      name: "IP-адрес бризера"
+      entity_category: diagnostic
   - platform: debug
     reset_reason:
-      name: "Причина перезагрузки ESP (ESP-004)"
+      name: "Причина перезагрузки ESP"
+      entity_category: diagnostic
 
 button:
   - platform: template
