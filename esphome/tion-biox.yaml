@@ -222,7 +222,8 @@ switch:
     switch_datapoint: 101
     internal: true
   - platform: tuya
-    name: "Звуковые сигналы (DP103)"
+    name: "Звуковые сигналы"
+    entity_category: config
     switch_datapoint: 103
     icon: mdi:volume-high
   - platform: tuya
@@ -232,26 +233,31 @@ switch:
     inverted: true
     internal: true
   - platform: tuya
-    name: "Режим рециркуляции (DP107)"
+    name: "Режим рециркуляции "
     switch_datapoint: 107
     icon: mdi:autorenew
   - platform: tuya
-    name: "Детская блокировка (DP111)"
+    name: "Детская блокировка"
+    entity_category: config
     switch_datapoint: 111
     icon: mdi:lock
   - platform: tuya
-    name: "Автоматический режим (DP131)"
+    id: dp131_auto_mode
+    name: "Автоматический режим"
     switch_datapoint: 131
+    internal: true
     icon: mdi:autorenew
   - platform: tuya
-    name: "Ночной режим (DP132)"
+    name: "Ночной режим"
+    entity_category: config
     switch_datapoint: 132
     icon: mdi:weather-night
   - platform: tuya
-    name: "Автокалибровка CO2 (DP136)"
+    id: dp136_auto_co2_calibration
+    name: "Автокалибровка CO2"
     switch_datapoint: 136
     icon: mdi:calibrate
-    disabled_by_default: true
+    internal: true
 
 number:
   - platform: tuya
@@ -273,21 +279,24 @@ number:
     unit_of_measurement: "°C"
     internal: true
   - platform: tuya
-    name: "Максимальная скорость авто (DP128)"
+    id: dp128_max_auto_speed
+    name: "Максимальная скорость авто"
     number_datapoint: 128
     min_value: 1
     max_value: 7
     step: 1
-    disabled_by_default: true
+    internal: true
   - platform: tuya
-    name: "Минимальная скорость авто (DP129)"
+    id: dp129_min_auto_speed
+    name: "Минимальная скорость авто"
     number_datapoint: 129
     min_value: 0
     max_value: 1
     step: 1
-    disabled_by_default: true
+    internal: true
   - platform: tuya
-    name: "Целевой уровень CO2 (DP130)"
+    id: dp130_target_co2
+    name: "Целевой уровень CO2"
     number_datapoint: 130
     min_value: 400
     max_value: 1500
@@ -301,17 +310,21 @@ number:
     max_value: 365
     step: 1
     unit_of_measurement: "дней"
+    entity_category: config
+    disabled_by_default: true
 
 select:
   - platform: tuya
-    name: "Яркость панели (DP104)"
+    name: "Яркость панели"
+    entity_category: config
     enum_datapoint: 104
     options:
       0: "0 процентов"
       1: "50 процентов"
       2: "100 процентов"
   - platform: tuya
-    name: "Скорость голосовых сообщений (DP125)"
+    id: dp125_voice_speed
+    name: "Скорость голосовых сообщений"
     enum_datapoint: 125
     options:
       0: "Скорость 1"
@@ -323,7 +336,8 @@ select:
       6: "Скорость 7"
     disabled_by_default: true
   - platform: tuya
-    name: "Цвет панели (DP133)"
+    name: "Цвет панели"
+    entity_category: config
     enum_datapoint: 133
     options:
       0: "Цвет 1"
