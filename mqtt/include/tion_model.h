@@ -14,6 +14,7 @@ class TionModel {
  public:
   bool update(const TuyaDatapoint &dp);
   bool has(uint8_t id) const;
+  bool supports(uint8_t id) const;
   const TionDpState *get(uint8_t id) const;
 
  private:
