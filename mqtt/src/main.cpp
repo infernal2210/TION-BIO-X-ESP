@@ -430,7 +430,7 @@ void publishDiscovery() {
              TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
     mqtt.publish(old_topic, "", true);
   }
-  const uint8_t binary_ids[] = {101, 103, 105, 107, 111, 117, 131, 132, 135, 136};
+  const uint8_t binary_ids[] = {101, 103, 105, 107, 109, 110, 111, 117, 131, 132, 135, 136};
   for (uint8_t id : binary_ids) {
     char old_topic[160];
     snprintf(old_topic, sizeof(old_topic), "%s/sensor/%s/dp_%u/config",
@@ -438,6 +438,13 @@ void publishDiscovery() {
     mqtt.publish(old_topic, "", true);
   }
 
+  const uint8_t changed_domain_ids[] = {104, 133, 134};
+  for (uint8_t id : changed_domain_ids) {
+    char old_topic[160];
+    snprintf(old_topic, sizeof(old_topic), "%s/sensor/%s/dp_%u/config",
+             TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
+    mqtt.publish(old_topic, "", true);
+  }
   // Publish the complete profile entity set before TION UART is connected.
   // Entities without a received state remain unknown in Home Assistant.
   for (uint8_t id = 101; id <= 136; ++id) {
