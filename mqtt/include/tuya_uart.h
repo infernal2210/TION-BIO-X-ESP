@@ -14,10 +14,20 @@ class TuyaUart {
   uint32_t validFrames() const { return valid_frames_; }
   uint32_t checksumErrors() const { return checksum_errors_; }
   uint32_t framingErrors() const { return framing_errors_; }
+  bool initialized() const { return initialized_; }
 
  private:
   static constexpr uint16_t kMaxPayload = 240;
   static constexpr uint16_t kFrameSize = 7 + kMaxPayload;
+  static constexpr uint32_t kHeartbeatIntervalMs = 15000;
+
+  enum class InitState : uint8_t {
+    WAIT_HEARTBEAT,
+    WAIT_PRODUCT,
+    WAIT_CONFIG,
+    WAIT_DATAPOINTS,
+    READY
+  };
 
   HardwareSerial &serial_;
   DatapointCallback callback_ = nullptr;
@@ -27,9 +37,15 @@ class TuyaUart {
   uint32_t valid_frames_ = 0;
   uint32_t checksum_errors_ = 0;
   uint32_t framing_errors_ = 0;
+  uint32_t last_heartbeat_ms_ = 0;
+  InitState init_state_ = InitState::WAIT_HEARTBEAT;
+  bool initialized_ = false;
 
   void consume(uint8_t byte);
   void processFrame();
   void processDatapoints(const uint8_t *payload, uint16_t length);
+  void sendCommand(uint8_t command, const uint8_t *payload = nullptr,
+                   uint16_t length = 0);
+  void sendEmptyCommand(uint8_t command);
   void reset();
 };
