@@ -44,28 +44,31 @@ void publishDatapoint(uint8_t id) {
   mqtt.publish(topic.c_str(), value, true);
 }
 
-void publishDiscovery() {
-  if (!mqtt.connected()) return;
+void publishDiscoveryDatapoint(uint8_t id) {
+  if (!mqtt.connected() || !tion_model.has(id)) return;
+
   char topic[160];
   char payload[512];
+  snprintf(topic, sizeof(topic), "%s/sensor/%s/dp_%u/config",
+           TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
+  snprintf(payload, sizeof(payload),
+    "{\"name\":\"TION DP %u\",\"unique_id\":\"%s_dp_%u\","
+    "\"state_topic\":\"%sstate/dp_%u\","
+    "\"availability_topic\":\"%savailability\","
+    "\"device\":{\"identifiers\":[\"%s\"],"
+    "\"name\":\"%s\",\"manufacturer\":\"TION\","
+    "\"model\":\"Bio X\"}}",
+    id, TION_DEVICE_ID, id, baseTopic().c_str(), id,
+    baseTopic().c_str(), TION_DEVICE_ID, TION_DEVICE_NAME);
 
+  if (mqtt.publish(topic, payload, true)) publishDatapoint(id);
+}
+
+void publishDiscovery() {
+  if (!mqtt.connected()) return;
   for (uint8_t id = 101; id <= 136; ++id) {
     if (!tion_model.has(id)) continue;
-
-    snprintf(topic, sizeof(topic), "%s/sensor/%s/dp_%u/config",
-             TION_MQTT_DISCOVERY_PREFIX, TION_DEVICE_ID, id);
-    snprintf(payload, sizeof(payload),
-      "{\"name\":\"TION DP %u\",\"unique_id\":\"%s_dp_%u\","
-      "\"state_topic\":\"%sstate/dp_%u\","
-      "\"availability_topic\":\"%savailability\","
-      "\"device\":{\"identifiers\":[\"%s\"],"
-      "\"name\":\"%s\",\"manufacturer\":\"TION\","
-      "\"model\":\"Bio X\"}}",
-      id, TION_DEVICE_ID, id, baseTopic().c_str(), id,
-      baseTopic().c_str(), TION_DEVICE_ID, TION_DEVICE_NAME);
-
-    mqtt.publish(topic, payload, true);
-    publishDatapoint(id);
+    publishDiscoveryDatapoint(id);
     yield();
   }
   discovery_sent = true;
@@ -83,8 +86,13 @@ void onDatapoint(uint8_t id, uint8_t type, const uint8_t *data,
                  uint16_t length) {
   TuyaDatapoint decoded;
   if (!decodeTuyaDatapoint(id, type, data, length, decoded)) return;
+  const bool was_known = tion_model.has(id);
   if (!tion_model.update(decoded)) return;
-  publishDatapoint(id);
+  if (mqtt.connected() && discovery_sent && !was_known) {
+    publishDiscoveryDatapoint(id);
+  } else {
+    publishDatapoint(id);
+  }
 }
 
 void startWifi() {
@@ -114,14 +122,16 @@ void connectMqtt() {
 }  // namespace
 
 void setup() {
+  startWifi();
+  tion_uart.setWifiStatus(WiFi.status() == WL_CONNECTED ? 0x03 : 0x02);
   tion_uart.begin(TION_UART_BAUD, onDatapoint);
   mqtt.setServer(TION_MQTT_DEFAULT_HOST, TION_MQTT_DEFAULT_PORT);
   mqtt.setBufferSize(768);
   mqtt.setCallback(onMqttMessage);
-  startWifi();
 }
 
 void loop() {
+  tion_uart.setWifiStatus(WiFi.status() == WL_CONNECTED ? 0x03 : 0x02);
   tion_uart.loop();
 
   if (WiFi.status() == WL_CONNECTED) {
