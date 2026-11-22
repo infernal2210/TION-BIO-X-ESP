@@ -48,15 +48,15 @@ api:
 
 ota:
   - platform: esphome
-    password: !secret ota_password
+    password: ${ota_password}
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
   power_save_mode: none
   ap:
     ssid: TION-BIOX-Настройка
-    password: !secret ap_password
+    password: ${ap_password}
 
 captive_portal:
 
