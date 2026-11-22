@@ -14,6 +14,19 @@ pio run -e tion_biox_lite
 pio run -e tion_biox_full
 ```
 
+## OTA updates
+
+The ESP-01 1 MB build uses `eagle.flash.1m64.ld`, reserving 64 KB for the unused filesystem area and providing an OTA-capable application layout. The OTA listener starts only after a separate OTA password (8–32 characters) has been saved on the device configuration page. The password is stored in a dedicated EEPROM area and is not committed to the repository.
+
+After installing this firmware once over USB, open the device page at its LAN IP and set the OTA password. In the same PowerShell window used by VS Code, set the matching environment variable (do not send it in chat):
+
+```powershell
+$env:OTA_PASSWORD = "your-private-ota-password"
+python -m platformio run -e tion_biox_lite_ota -t upload --upload-port 192.168.1.xxx
+```
+
+Replace the IP with the address shown on the device page or in the router. The regular `tion_biox_lite` environment remains the USB upload/build environment. The actual image size must be checked in the PlatformIO build output before the first OTA update.
+
 ## First boot setup
 
 No Wi-Fi or MQTT credentials are compiled into the firmware. On first boot
@@ -25,7 +38,7 @@ point:
 - Setup page: `http://192.168.4.1/`
 
 The page scans nearby Wi-Fi networks and also allows manual SSID entry.
-Enter the Wi-Fi password and MQTT host/port/username/password, then save.
+Enter the Wi-Fi password and MQTT host/port/username/password, then save. On later visits, leave Wi-Fi and MQTT password fields blank to retain the saved passwords. Set a separate OTA password to enable wireless firmware updates.
 The device restarts and connects using the stored settings. The default
 broker is `192.168.1.10:1883`. If the saved network cannot be reached after
 five 15-second attempts, the setup AP starts while the device continues
