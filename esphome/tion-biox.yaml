@@ -2,7 +2,7 @@ substitutions:
   device_name: tion-biox
   friendly_name: "Бризер TION Bio X"
   # ТЕСТ DP122: false — обычная работа; true — имитация состояния ниже
-  dp122_test_mode: "false"
+  dp122_test_mode: "true"
   dp122_test_state: "2"
 
 external_components:
