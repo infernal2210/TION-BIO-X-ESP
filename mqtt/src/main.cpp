@@ -465,7 +465,7 @@ void onMqttMessage(char *topic, uint8_t *payload, unsigned int length) {
   if (length == 0 || length >= 32 || !tion_uart.initialized()) return;
   char value[32];
   memcpy(value, payload, length);
-  value[length] = '\\0';
+  value[length] = '\0';
   const String command = String(value);
   const String topic_name(topic);
 
@@ -494,7 +494,7 @@ void onMqttMessage(char *topic, uint8_t *payload, unsigned int length) {
   if (topic_name == baseTopic() + "command/climate/temperature") {
     char *end = nullptr;
     const long temperature = strtol(value, &end, 10);
-    if (end != value && *end == '\\0' && temperature >= 0 && temperature <= 30) {
+    if (end != value && *end == '\0' && temperature >= 0 && temperature <= 30) {
       tion_uart.sendDatapointInteger(114, static_cast<int32_t>(temperature));
     }
     return;
@@ -516,7 +516,7 @@ void onMqttMessage(char *topic, uint8_t *payload, unsigned int length) {
   if (topic_name == baseTopic() + "command/dp_134") {
     char *end = nullptr;
     const long days = strtol(value, &end, 10);
-    if (end != value && *end == '\\0' && days >= 1 && days <= 365) {
+    if (end != value && *end == '\0' && days >= 1 && days <= 365) {
       tion_uart.sendDatapointInteger(134, static_cast<int32_t>(days));
     }
     return;
