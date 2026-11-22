@@ -45,10 +45,16 @@ before deployment in an untrusted environment.
 - State: `state/dp_<id>` (retained numeric datapoint values)
 - Home Assistant Discovery prefix: `homeassistant`
 
-At this diagnostic stage, Home Assistant entities are exposed as generic
-numeric sensors named `TION DP <id>`. These are raw Tuya datapoint values,
-not yet human-friendly controls. No MQTT commands are accepted and no
-control datapoints are transmitted to the appliance.
+Home Assistant Discovery is published as soon as the ESP connects to
+the MQTT broker; it does not wait for the TION UART handshake. The device
+therefore appears in Home Assistant while the ESP is still on the USB bench.
+
+Diagnostic entities report Wi-Fi RSSI, ESP IP address, UART initialization
+state, valid UART frames, checksum errors, framing errors, and free heap.
+TION datapoint entities are added when the appliance reports datapoints.
+At this diagnostic stage, datapoints are exposed as generic numeric sensors
+named `TION DP <id>`; these are raw Tuya values, not human-friendly controls.
+No MQTT commands are accepted and no control datapoints are transmitted.
 
 ## Hardware
 
