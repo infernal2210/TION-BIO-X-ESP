@@ -145,6 +145,7 @@ switch:
     internal: true
   - platform: tuya
     name: "Звуковые сигналы (DP103)"
+    entity_category: config
     switch_datapoint: 103
     icon: mdi:volume-high
   - platform: tuya
@@ -159,10 +160,12 @@ switch:
     icon: mdi:autorenew
   - platform: tuya
     name: "Детская блокировка (DP111)"
+    entity_category: config
     switch_datapoint: 111
     icon: mdi:lock
   - platform: tuya
     name: "Ночной режим (DP132)"
+    entity_category: config
     switch_datapoint: 132
     icon: mdi:weather-night
 
@@ -226,7 +229,6 @@ sensor:
     internal: true
   - platform: tuya
     name: "Температура снаружи (DP112)"
-    entity_category: diagnostic
     sensor_datapoint: 112
     unit_of_measurement: "°C"
     accuracy_decimals: 0
@@ -240,7 +242,6 @@ sensor:
     icon: mdi:timer-outline
   - platform: tuya
     name: "Остаток ресурса фильтра (DP115)"
-    entity_category: diagnostic
     sensor_datapoint: 115
     unit_of_measurement: "%"
     accuracy_decimals: 0
