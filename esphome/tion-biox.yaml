@@ -466,7 +466,8 @@ text_sensor:
 
 button:
   - platform: template
-    name: "Сброс к заводским настройкам (DP109)"
+    name: "Сброс к заводским настройкам"
+    entity_category: config
     icon: mdi:factory
     disabled_by_default: true
     on_press:
@@ -474,28 +475,29 @@ button:
           ESP_LOGW("TION", "DP109 — Команда сброса к заводским настройкам");
           id(tion_tuya).force_set_boolean_datapoint_value(109, true);
   - platform: template
-    name: "Сброс счётчика фильтра (DP110)"
-    icon: mdi:filter-refresh
+    name: "Сброс счётчика фильтра"
+    icon: mdi:filter
     on_press:
       - lambda: |-
           ESP_LOGI("TION", "DP110 — Команда сброса счётчика фильтра");
           id(tion_tuya).force_set_boolean_datapoint_value(110, true);
   - platform: template
-    name: "Ручная калибровка CO2 (DP135)"
+    id: dp135_manual_co2_calibration
+    name: "Ручная калибровка CO2"
     icon: mdi:calibrate
-    disabled_by_default: true
+    internal: true
     on_press:
       - lambda: |-
           ESP_LOGI("TION", "DP135 — Команда ручной калибровки CO2");
           id(tion_tuya).force_set_boolean_datapoint_value(135, true);
   - platform: restart
-    name: "Перезагрузить контроллер ESP (ESP-005)"
+    name: "Перезагрузить контроллер ESP"
     entity_category: diagnostic
 
 climate:
   - platform: template
     id: tion_climate
-    name: "Климат TION Bio X (DP101/102/105/108/114)"
+    name: "Климат TION Bio X"
     icon: mdi:hvac
     sensor: tion_inside_temperature
     supported_modes:
