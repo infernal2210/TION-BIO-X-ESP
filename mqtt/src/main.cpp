@@ -81,8 +81,8 @@ const DatapointInfo *datapointInfo(uint8_t id) {
     { "Подогрев", "binary_sensor", "", "", "", "mdi:heat-wave" },
     { "Режим вентиляции", "binary_sensor", "", "", "", "mdi:air-filter" },
     { "Внутренняя температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
-    { "Сброс заводских настроек", "sensor", "", "", "", "mdi:restart-alert" },
-    { "Сброс счётчика фильтра", "sensor", "", "", "", "mdi:air-filter" },
+    { "Сброс заводских настроек", "binary_sensor", "", "", "", "mdi:restart-alert" },
+    { "Сброс счётчика фильтра", "binary_sensor", "", "", "", "mdi:air-filter" },
     { "Детский замок", "binary_sensor", "", "", "", "mdi:lock" },
     { "Внешняя температура", "sensor", "°C", "temperature", "measurement", "mdi:thermometer" },
     { "Время работы", "sensor", "s", "duration", "total_increasing", "mdi:timer-outline" },
@@ -106,7 +106,7 @@ const DatapointInfo *datapointInfo(uint8_t id) {
     { "Ночной режим", "binary_sensor", "", "", "", "mdi:weather-night" },
     { "Цвет панели", "sensor", "", "", "", "mdi:palette" },
     { "Период замены фильтра", "sensor", "дн.", "", "measurement", "mdi:calendar-clock" },
-    { "Калибровка CO₂", "sensor", "", "", "", "mdi:tune" },
+    { "Калибровка CO₂", "binary_sensor", "", "", "", "mdi:tune" },
     { "Автокалибровка CO₂", "binary_sensor", "", "", "", "mdi:molecule-co2" }
   };
   switch (id) {
@@ -132,7 +132,7 @@ const DatapointInfo *datapointInfo(uint8_t id) {
 }
 
 const char *enumValue(uint8_t id, int32_t value) {
-  static const char *light[] = { "0%", "50%", "100%" };
+  static const char *light[] = { "0", "50", "100" };
   static const char *heater[] = { "0", "1_KB", "1_4_KB" };
   static const char *errors[] = { "None", "error1", "error2", "error3", "error4",
     "error5", "error6", "error7", "error8", "error9", "warning10", "warning11" };
