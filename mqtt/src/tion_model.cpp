@@ -1,14 +1,26 @@
 #include "tion_model.h"
 
+// Each PlatformIO environment must select exactly one device profile.
+#if defined(TION_PROFILE_LITE) && defined(TION_PROFILE_FULL)
+#error "Select only one TION profile: LITE or FULL"
+#elif !defined(TION_PROFILE_LITE) && !defined(TION_PROFILE_FULL)
+#error "No TION profile selected. Use tion_biox_lite or tion_biox_full"
+#endif
+
 bool TionModel::isKnown(uint8_t id) const {
   switch (id) {
+    // Datapoints available on the Lite and Full appliance profiles.
     case 101: case 102: case 103: case 104: case 105:
-    case 106: case 107: case 108: case 109: case 110:
-    case 111: case 112: case 113: case 114: case 115:
-    case 116: case 117: case 118: case 119: case 120:
+    case 107: case 108: case 109: case 110: case 111:
+    case 112: case 113: case 114: case 115:
+    case 118: case 127: case 132: case 133: case 134:
+#if defined(TION_PROFILE_FULL)
+    // Additional air-quality and automatic-control datapoints on Full.
+    case 106: case 116: case 117: case 119: case 120:
     case 122: case 123: case 124: case 125: case 126:
-    case 127: case 128: case 129: case 130: case 131:
-    case 132: case 133: case 134: case 135: case 136:
+    case 128: case 129: case 130: case 131:
+    case 135: case 136:
+#endif
       return true;
     default:
       return false;
@@ -17,22 +29,34 @@ bool TionModel::isKnown(uint8_t id) const {
 
 bool TionModel::typeMatches(uint8_t id, TuyaDpType type) const {
   switch (id) {
-    // Boolean datapoints
+    // Boolean datapoints common to Lite and Full.
     case 101: case 103: case 105: case 107: case 109:
-    case 110: case 111: case 117: case 131: case 132:
-    case 135: case 136:
+    case 110: case 111: case 132:
       return type == TuyaDpType::BOOL;
 
-    // Integer datapoints
-    case 102: case 106: case 108: case 112: case 113:
-    case 114: case 115: case 116: case 119: case 120:
-    case 126: case 128: case 129: case 130: case 134:
+    // Integer datapoints common to Lite and Full.
+    case 102: case 108: case 112: case 113: case 114:
+    case 115: case 134:
       return type == TuyaDpType::INTEGER;
 
-    // Enumerated datapoints
-    case 104: case 118: case 122: case 123: case 124:
-    case 125: case 127: case 133:
+    // Enumerated datapoints common to Lite and Full.
+    case 104: case 118: case 127: case 133:
       return type == TuyaDpType::ENUM;
+
+#if defined(TION_PROFILE_FULL)
+    // Full-only boolean datapoints.
+    case 117: case 131: case 135: case 136:
+      return type == TuyaDpType::BOOL;
+
+    // Full-only integer datapoints.
+    case 106: case 116: case 119: case 120: case 126:
+    case 128: case 129: case 130:
+      return type == TuyaDpType::INTEGER;
+
+    // Full-only enumerated datapoints.
+    case 122: case 123: case 124: case 125:
+      return type == TuyaDpType::ENUM;
+#endif
 
     default:
       return false;
